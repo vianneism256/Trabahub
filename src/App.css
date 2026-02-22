@@ -109,6 +109,7 @@ input, select, textarea {
   border: 1px solid var(--gray-300);
   border-radius: 6px;
   background-color: white;
+  color: var(--gray-900);
   transition: all 0.2s;
   width: 100%;
 }
