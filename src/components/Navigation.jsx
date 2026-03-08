@@ -91,7 +91,7 @@ export default function Navigation() {
                 backgroundColor: 'var(--gray-50)',
                 borderRadius: 6,
               }}>
-                <span style={{ fontSize: 20 }}>👤</span>
+                <span style={{ fontSize: 20 }}></span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-900)' }}>
                     {currentUser.email.split('@')[0]}
