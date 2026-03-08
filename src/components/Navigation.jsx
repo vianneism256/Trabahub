@@ -189,7 +189,7 @@ export default function Navigation() {
               transition: 'all 0.2s',
             }}
           >
-            💼 My Jobs
+            My Jobs
           </button>
         </div>
       )}
