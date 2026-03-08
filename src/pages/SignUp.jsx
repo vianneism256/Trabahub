@@ -14,6 +14,23 @@ export default function SignUp() {
   const { signup } = useAuth()
   const { login, signInWithGoogle } = useAuth()
 
+  async function redirectByRole(uid) {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', uid))
+      if (userDoc.exists()) {
+        const role = userDoc.data().role
+        if (role === 'freelancer') navigate('/freelancer')
+        else if (role === 'admin') navigate('/admin')
+        else navigate('/customer')
+      } else {
+        navigate('/')
+      }
+    } catch (err) {
+      console.error(err)
+      navigate('/')
+    }
+  }  
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
