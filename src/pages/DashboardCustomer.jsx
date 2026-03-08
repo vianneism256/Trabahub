@@ -212,7 +212,7 @@ export default function DashboardCustomer() {
                 cursor: 'pointer',
                 transition: 'all 0.2s',
               }}>
-                {loading ? '⏳ Posting...' : '📤 Post Job'}
+                {loading ? 'Posting...' : 'Post Job'}
               </button>
             </form>
           </div>
@@ -263,7 +263,7 @@ export default function DashboardCustomer() {
                           backgroundColor: job.status === 'closed' ? 'var(--gray-200)' : 'var(--success-light)',
                           color: job.status === 'closed' ? 'var(--gray-700)' : 'var(--success)',
                         }}>
-                          {job.status === 'closed' ? '🔒 Closed' : '🟢 Open'}
+                          {job.status === 'closed' ? 'Closed' : 'Open'}
                         </span>
                       </div>
                       {job.status === 'open' && (
@@ -432,7 +432,7 @@ export default function DashboardCustomer() {
                           fontSize: 14,
                           transition: 'background-color 0.2s',
                         }} onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--primary-dark)'} onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--primary)'}>
-                          📧 Email
+                          Email
                         </a>
                         {freelancer.phone && (
                           <a href={`tel:${freelancer.phone}`} style={{
@@ -447,7 +447,7 @@ export default function DashboardCustomer() {
                             fontSize: 14,
                             transition: 'background-color 0.2s',
                           }} onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--gray-300)'} onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--gray-200)'}>
-                            📱 Call
+                            Call
                           </a>
                         )}
                       </div>

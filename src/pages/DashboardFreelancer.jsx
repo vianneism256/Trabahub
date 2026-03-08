@@ -260,7 +260,7 @@ export default function DashboardFreelancer() {
                     fontWeight: 600,
                     fontSize: 14,
                   }}>
-                    ✏️ Edit Profile
+                    Edit Profile
                   </button>
                 </div>
 
@@ -446,7 +446,7 @@ export default function DashboardFreelancer() {
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                     }}>
-                      {loading ? '⏳ Saving...' : '💾 Save Profile'}
+                      {loading ? 'Saving...' : 'Save Profile'}
                     </button>
                     <button onClick={() => { setIsEditingProfile(false); setMessage(''); }} style={{
                       flex: 1,
