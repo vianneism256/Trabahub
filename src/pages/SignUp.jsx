@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthProvider'
+import { db } from '../firebaseConfig'
+import { doc, getDoc } from 'firebase/firestore'
 
 export default function SignUp() {
   const [email, setEmail] = useState('')
@@ -10,6 +12,7 @@ export default function SignUp() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { signup } = useAuth()
+  const { login, signInWithGoogle } = useAuth()
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -19,6 +22,21 @@ export default function SignUp() {
       if (role === 'freelancer') navigate('/freelancer')
       else if (role === 'admin') navigate('/admin')
       else navigate('/customer')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+
+    async function handleGoogle() {
+    setError('')
+    try {
+      const user = await signInWithGoogle()
+      if (user.isNewUser) {
+        navigate('/select-role')
+      } else {
+        await redirectByRole(user.uid)
+      }
     } catch (err) {
       setError(err.message)
     }
