@@ -57,7 +57,7 @@ export default function JobCard({ job, currentUserId, onApply, userCategories = 
               fontWeight: 700,
               whiteSpace: 'nowrap',
             }}>
-              ⭐ Good Fit
+              Good Fit
             </span>
           )}
         </div>
