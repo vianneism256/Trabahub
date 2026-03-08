@@ -77,7 +77,7 @@ export default function Navigation() {
           cursor: 'pointer',
           transition: 'opacity 0.2s',
         }} onMouseEnter={(e) => e.target.style.opacity = '0.8'} onMouseLeave={(e) => e.target.style.opacity = '1'}>
-          🛠️ Trabahub
+          Trabahub
         </button>
 
         <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
