@@ -157,7 +157,7 @@ export default function Navigation() {
               transition: 'all 0.2s',
             }}
           >
-            🔍 Find Freelancers
+            Find Freelancers
           </button>
           <button
             onClick={() => navigate('/customer', { state: { activeTab: 'post-job' } })}
@@ -173,7 +173,7 @@ export default function Navigation() {
               transition: 'all 0.2s',
             }}
           >
-            📝 Post a Job
+            Post a Job
           </button>
           <button
             onClick={() => navigate('/customer', { state: { activeTab: 'my-jobs' } })}
@@ -217,7 +217,7 @@ export default function Navigation() {
               transition: 'all 0.2s',
             }}
           >
-            🎯 Browse Jobs
+            Browse Jobs
           </button>
           <button
             onClick={() => navigate('/freelancer', { state: { activeTab: 'my-applications' } })}
@@ -233,7 +233,7 @@ export default function Navigation() {
               transition: 'all 0.2s',
             }}
           >
-            📧 My Applications
+            My Applications
           </button>
           <button
             onClick={() => navigate('/freelancer', { state: { activeTab: 'my-profile' } })}
@@ -249,7 +249,7 @@ export default function Navigation() {
               transition: 'all 0.2s',
             }}
           >
-            👤 My Profile
+            My Profile
           </button>
         </div>
       )}
