@@ -33,7 +33,9 @@ export default function DashboardCustomer() {
   }, [])
 
   useEffect(() => {
-    if (selectedCategory) {
+    if (selectedCategory === 'all') {
+      loadAllFreelancers()
+    } else if (selectedCategory) {
       loadFreelancers()
     } else {
       setFreelancers([])
@@ -55,6 +57,21 @@ export default function DashboardCustomer() {
       const data = await freelancerService.getFreelancersByCategory(selectedCategory)
       const verified = data.filter((f) => f.verified)
       setFreelancers(verified)
+    } catch (err) {
+      console.error(err)
+    }
+    setLoading(false)
+  }
+
+  async function loadAllFreelancers() {
+    setLoading(true)
+    try {
+      const results = await Promise.all(
+        freelancerService.CATEGORIES.map((cat) => freelancerService.getFreelancersByCategory(cat))
+      )
+      const all = results.flat()
+      const unique = Array.from(new Map(all.map((f) => [f.uid, f])).values())
+      setFreelancers(unique.filter((f) => f.verified))
     } catch (err) {
       console.error(err)
     }
@@ -344,6 +361,7 @@ export default function DashboardCustomer() {
                 }}
               >
                 <option value="">-- Choose a category --</option>
+                <option value="all">All Categories</option>
                 {freelancerService.CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
