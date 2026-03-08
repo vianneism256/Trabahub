@@ -58,6 +58,20 @@ export default function SignUp() {
         </button>
       </form>
 
+            <button onClick={handleGoogle} style={{
+        width: '100%',
+        padding: '12px',
+        marginTop: 15,
+        backgroundColor: '#fff',
+        color: '#333',
+        border: '1px solid #ddd',
+        borderRadius: 4,
+        fontSize: 16,
+        fontWeight: 'bold',
+      }}>
+        Sign in with Google
+      </button>
+
       <p style={{ marginTop: 20, textAlign: 'center' }}>
         Already have an account? <Link to="/login">Login here</Link>
       </p>
