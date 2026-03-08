@@ -73,17 +73,14 @@ function App() {
                   maxWidth: 900,
                 }}>
                   <div>
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>🔧</div>
                     <h3 style={{ color: 'white' }}>Find Services</h3>
                     <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>Browse skilled professionals</p>
                   </div>
                   <div>
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>💼</div>
                     <h3 style={{ color: 'white' }}>Offer Skills</h3>
                     <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>Get hired for your expertise</p>
                   </div>
                   <div>
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>✓</div>
                     <h3 style={{ color: 'white' }}>Verified Quality</h3>
                     <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>Trusted professionals only</p>
                   </div>
