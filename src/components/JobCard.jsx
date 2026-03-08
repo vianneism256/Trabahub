@@ -25,7 +25,7 @@ export default function JobCard({ job, currentUserId, onApply, userCategories = 
     setLoading(false)
   }
 
-  const isRelevant = userCategories.length === 0 || job.categories.some((c) => userCategories.includes(c))
+  const isRelevant = job.categories.some((c) => userCategories.includes(c))
   const borderColor = isRelevant ? 'var(--primary)' : 'var(--gray-200)'
 
   return (
@@ -36,6 +36,7 @@ export default function JobCard({ job, currentUserId, onApply, userCategories = 
       border: `2px solid ${borderColor}`,
       overflow: 'hidden',
       transition: 'all 0.2s',
+      opacity: isRelevant ? 1 : 0.75,
     }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-md)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-sm)'}>
       <div style={{ padding: 24 }}>
         {/* Header */}
@@ -46,7 +47,7 @@ export default function JobCard({ job, currentUserId, onApply, userCategories = 
               Posted {new Date(job.createdAt).toLocaleDateString()}
             </p>
           </div>
-          {isRelevant && (
+          {isRelevant ? (
             <span style={{
               display: 'inline-block',
               backgroundColor: 'var(--success-light)',
@@ -58,6 +59,19 @@ export default function JobCard({ job, currentUserId, onApply, userCategories = 
               whiteSpace: 'nowrap',
             }}>
               Good Fit
+            </span>
+          ) : (
+            <span style={{
+              display: 'inline-block',
+              backgroundColor: 'var(--gray-100)',
+              color: 'var(--gray-500)',
+              padding: '4px 12px',
+              borderRadius: 20,
+              fontSize: 11,
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+            }}>
+              Not Your Field
             </span>
           )}
         </div>
@@ -138,7 +152,21 @@ export default function JobCard({ job, currentUserId, onApply, userCategories = 
         {/* Apply Button / Form */}
         {!applied ? (
           <>
-            {!showApplyForm ? (
+            {!isRelevant ? (
+              <button disabled style={{
+                width: '100%',
+                padding: '12px 16px',
+                backgroundColor: 'var(--gray-100)',
+                color: 'var(--gray-400)',
+                border: '1px solid var(--gray-200)',
+                borderRadius: 6,
+                fontWeight: 700,
+                cursor: 'not-allowed',
+                fontSize: 14,
+              }}>
+                Skills Don't Match
+              </button>
+            ) : !showApplyForm ? (
               <button onClick={() => setShowApplyForm(true)} style={{
                 width: '100%',
                 padding: '12px 16px',
