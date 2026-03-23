@@ -1,4 +1,4 @@
-import { doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebaseConfig'
 
 export const jobService = {
@@ -65,5 +65,25 @@ export const jobService = {
   async deleteJob(jobId) {
     const ref = doc(db, 'jobs', jobId)
     await deleteDoc(ref)
+  },
+
+  listenToOpenJobs(callback) {
+    const q = query(collection(db, 'jobs'), where('status', '==', 'open'))
+    return onSnapshot(q, (snap) => {
+      const data = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => b.createdAt - a.createdAt)
+      callback(data)
+    })
+  },
+
+  listenToCustomerJobs(uid, callback) {
+    const q = query(collection(db, 'jobs'), where('customerId', '==', uid))
+    return onSnapshot(q, (snap) => {
+      const data = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => b.createdAt - a.createdAt)
+      callback(data)
+    })
   },
 }

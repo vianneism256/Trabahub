@@ -39,9 +39,28 @@ export default function DashboardFreelancer() {
   }, [location.state?.activeTab])
 
   useEffect(() => {
-    if (currentUser) {
-      loadProfile()
-      loadJobs()
+    if (!currentUser) return
+    loadProfile()
+
+    // Real-time jobs listener
+    const unsubJobs = jobService.listenToOpenJobs((allJobs) => {
+      setJobs(allJobs)
+      const myApps = allJobs.reduce((acc, job) => {
+        const userApps = job.applications?.filter((a) => a.freelancerId === currentUser.uid) || []
+        return [...acc, ...userApps.map(() => job.id)]
+      }, [])
+      setMyApplications(myApps)
+    })
+
+    // Real-time conversations listener
+    const unsubConvs = conversationService.listenToFreelancerConversations(
+      currentUser.uid,
+      (data) => setConversations(data)
+    )
+
+    return () => {
+      unsubJobs()
+      unsubConvs()
     }
   }, [currentUser])
 
@@ -60,11 +79,7 @@ export default function DashboardFreelancer() {
     }
   }
 
-  useEffect(() => {
-    if (activeTab === 'messages' && currentUser) {
-      loadConversations()
-    }
-  }, [activeTab])
+
 
   useEffect(() => {
     if (messagesEndRef.current) {

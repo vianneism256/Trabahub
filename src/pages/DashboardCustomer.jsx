@@ -37,8 +37,24 @@ export default function DashboardCustomer() {
   }, [location.state?.activeTab])
 
   useEffect(() => {
-    loadCustomerJobs()
-  }, [])
+    if (!currentUser) return
+
+    // Real-time customer jobs listener
+    const unsubJobs = jobService.listenToCustomerJobs(currentUser.uid, (data) => {
+      setCustomerJobs(data)
+    })
+
+    // Real-time conversations listener
+    const unsubConvs = conversationService.listenToCustomerConversations(
+      currentUser.uid,
+      (data) => setConversations(data)
+    )
+
+    return () => {
+      unsubJobs()
+      unsubConvs()
+    }
+  }, [currentUser])
 
   useEffect(() => {
     if (selectedCategory === 'all') {
@@ -50,11 +66,7 @@ export default function DashboardCustomer() {
     }
   }, [selectedCategory])
 
-  useEffect(() => {
-    if (activeTab === 'messages' && currentUser) {
-      loadConversations()
-    }
-  }, [activeTab])
+
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -137,7 +149,6 @@ export default function DashboardCustomer() {
       await jobService.createJob(currentUser.uid, jobForm)
       setMessage('✓ Job posted successfully!')
       setJobForm({ title: '', description: '', budget: '', categories: [], timeline: 'flexible' })
-      await loadCustomerJobs()
       setTimeout(() => setMessage(''), 3000)
     } catch (err) {
       setMessage(`Error: ${err.message}`)
@@ -158,7 +169,6 @@ export default function DashboardCustomer() {
     try {
       await jobService.updateJobStatus(jobId, 'closed')
       await conversationService.closeConversationsByJob(jobId)
-      await loadCustomerJobs()
     } catch (err) {
       console.error(err)
     }

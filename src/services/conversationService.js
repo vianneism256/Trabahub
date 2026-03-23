@@ -108,4 +108,30 @@ export const conversationService = {
     )
     await Promise.all(updates)
   },
+
+  listenToFreelancerConversations(freelancerId, callback) {
+    const q = query(
+      collection(db, 'conversations'),
+      where('freelancerId', '==', freelancerId)
+    )
+    return onSnapshot(q, (snap) => {
+      const data = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => b.lastMessageAt - a.lastMessageAt)
+      callback(data)
+    })
+  },
+
+  listenToCustomerConversations(customerId, callback) {
+    const q = query(
+      collection(db, 'conversations'),
+      where('customerId', '==', customerId)
+    )
+    return onSnapshot(q, (snap) => {
+      const data = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => b.lastMessageAt - a.lastMessageAt)
+      callback(data)
+    })
+  },
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebaseConfig'
 import { freelancerService } from '../services/freelancerService'
 
@@ -10,23 +10,22 @@ export default function DashboardAdmin() {
   const [activeTab, setActiveTab] = useState('freelancers')
 
   useEffect(() => {
-    loadData()
-  }, [])
-
-  async function loadData() {
     setLoading(true)
-    try {
-      const freelancersData = await freelancerService.getAllFreelancers()
-      setFreelancers(freelancersData)
 
-      const usersSnap = await getDocs(collection(db, 'users'))
-      const usersData = usersSnap.docs.map((d) => d.data())
-      setUsers(usersData)
-    } catch (err) {
-      console.error(err)
+    const unsubFreelancers = onSnapshot(collection(db, 'freelancers'), (snap) => {
+      setFreelancers(snap.docs.map((d) => d.data()))
+      setLoading(false)
+    })
+
+    const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
+      setUsers(snap.docs.map((d) => d.data()))
+    })
+
+    return () => {
+      unsubFreelancers()
+      unsubUsers()
     }
-    setLoading(false)
-  }
+  }, [])
 
   async function toggleVerified(uid, currentStatus) {
     try {
