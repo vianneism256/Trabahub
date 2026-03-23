@@ -71,6 +71,14 @@ export default function DashboardCustomer() {
     return () => unsubscribe()
   }, [selectedConversation])
 
+
+  // Keep selectedConversation in sync when conversations list updates
+  useEffect(() => {
+    if (!selectedConversation) return
+    const updated = conversations.find((c) => c.id === selectedConversation.id)
+    if (updated) setSelectedConversation(updated)
+  }, [conversations])
+
   async function loadCustomerJobs() {
     try {
       const jobs = await jobService.getJobsByCustomer(currentUser.uid)
@@ -195,6 +203,7 @@ export default function DashboardCustomer() {
         newMessage
       )
       setNewMessage('')
+      await loadConversations()
     } catch (err) {
       alert(`Error: ${err.message}`)
     }
