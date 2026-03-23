@@ -14,7 +14,7 @@ export default function ForgotPassword() {
     setMessage('')
     try {
       await resetPassword(email)
-      setMessage('If that email exists, you will receive a reset link.')
+      setMessage('If that email exists, you will receive a reset link. Please check your spam folder aswell')
     } catch (err) {
       setError(err.message)
     }
