@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthProvider'
 import { useLocation } from 'react-router-dom'
 import { freelancerService } from '../services/freelancerService'
 import { jobService } from '../services/jobService'
+import { conversationService } from '../services/conversationService'
 
 export default function DashboardCustomer() {
   const { currentUser } = useAuth()
@@ -21,6 +22,13 @@ export default function DashboardCustomer() {
     categories: [],
     timeline: 'flexible',
   })
+  const [conversations, setConversations] = useState([])
+  const [selectedConversation, setSelectedConversation] = useState(null)
+  const [filteredByJob, setFilteredByJob] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [newMessage, setNewMessage] = useState('')
+  const [sendingMessage, setSendingMessage] = useState(false)
+  const messagesEndRef = useRef(null)
 
   useEffect(() => {
     if (location.state?.activeTab) {
@@ -41,6 +49,27 @@ export default function DashboardCustomer() {
       setFreelancers([])
     }
   }, [selectedCategory])
+
+  useEffect(() => {
+    if (activeTab === 'messages' && currentUser) {
+      loadConversations()
+    }
+  }, [activeTab])
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages])
+
+  useEffect(() => {
+    if (!selectedConversation) return
+    const unsubscribe = conversationService.listenToMessages(
+      selectedConversation.id,
+      (msgs) => setMessages(msgs)
+    )
+    return () => unsubscribe()
+  }, [selectedConversation])
 
   async function loadCustomerJobs() {
     try {
@@ -115,6 +144,66 @@ export default function DashboardCustomer() {
     } catch (err) {
       console.error(err)
     }
+  }
+
+  async function handleCloseJob(jobId) {
+    try {
+      await jobService.updateJobStatus(jobId, 'closed')
+      await conversationService.closeConversationsByJob(jobId)
+      await loadCustomerJobs()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function loadConversations() {
+    try {
+      const data = await conversationService.getConversationsByCustomer(currentUser.uid)
+      setConversations(data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function handleAccept(conversationId) {
+    try {
+      await conversationService.updateStatus(conversationId, 'accepted')
+      setSelectedConversation((prev) => ({ ...prev, status: 'accepted' }))
+      await loadConversations()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function handleDecline(conversationId) {
+    try {
+      await conversationService.updateStatus(conversationId, 'declined')
+      setSelectedConversation((prev) => ({ ...prev, status: 'declined' }))
+      await loadConversations()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function handleSendMessage() {
+    if (!newMessage.trim() || !selectedConversation) return
+    setSendingMessage(true)
+    try {
+      await conversationService.sendMessage(
+        selectedConversation.id,
+        currentUser.uid,
+        newMessage
+      )
+      setNewMessage('')
+    } catch (err) {
+      alert(`Error: ${err.message}`)
+    }
+    setSendingMessage(false)
+  }
+
+  function handleViewApplicants(jobId) {
+    setFilteredByJob(jobId)
+    setActiveTab('messages')
   }
 
   return (
@@ -283,19 +372,34 @@ export default function DashboardCustomer() {
                           {job.status === 'closed' ? 'Closed' : 'Open'}
                         </span>
                       </div>
-                      {job.status === 'open' && (
-                        <button onClick={() => handleCloseJob(job.id)} style={{
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => handleViewApplicants(job.id)} style={{
                           padding: '8px 16px',
-                          backgroundColor: 'var(--danger)',
+                          backgroundColor: 'var(--primary)',
                           color: 'white',
                           border: 'none',
                           borderRadius: 6,
                           cursor: 'pointer',
                           fontSize: 13,
+                          fontWeight: 600,
                         }}>
-                          Close Job
+                          View Applicants
                         </button>
-                      )}
+                        {job.status === 'open' && (
+                          <button onClick={() => handleCloseJob(job.id)} style={{
+                            padding: '8px 16px',
+                            backgroundColor: 'var(--danger)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            fontSize: 13,
+                            fontWeight: 600,
+                          }}>
+                            Close Job
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <p style={{ marginBottom: 12, color: 'var(--gray-700)' }}>{job.description}</p>
@@ -476,6 +580,284 @@ export default function DashboardCustomer() {
             )}
           </div>
         )}
+
+        {/* Messages Tab */}
+        {activeTab === 'messages' && (
+          <div style={{
+            display: 'flex',
+            height: 'calc(100vh - 180px)',
+            backgroundColor: 'white',
+            borderRadius: 8,
+            boxShadow: 'var(--shadow-sm)',
+            overflow: 'hidden',
+            border: '1px solid var(--gray-200)',
+          }}>
+
+            {/* LEFT PANEL */}
+            <div style={{
+              width: 320,
+              borderRight: '1px solid var(--gray-200)',
+              overflowY: 'auto',
+              flexShrink: 0,
+            }}>
+              <div style={{
+                padding: '20px 16px',
+                borderBottom: '1px solid var(--gray-200)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Messages</h3>
+                {filteredByJob && (
+                  <button onClick={() => setFilteredByJob(null)} style={{
+                    fontSize: 12,
+                    color: 'var(--primary)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}>
+                    Show All
+                  </button>
+                )}
+              </div>
+
+              {conversations
+                .filter((c) => filteredByJob ? c.jobId === filteredByJob : true)
+                .length === 0 ? (
+                <div style={{ padding: 24, textAlign: 'center', color: 'var(--gray-500)', fontSize: 14 }}>
+                  {filteredByJob ? 'No applicants for this job yet.' : 'No conversations yet.'}
+                </div>
+              ) : (
+                conversations
+                  .filter((c) => filteredByJob ? c.jobId === filteredByJob : true)
+                  .map((conv) => (
+                    <div
+                      key={conv.id}
+                      onClick={() => setSelectedConversation(conv)}
+                      style={{
+                        padding: '14px 16px',
+                        borderBottom: '1px solid var(--gray-100)',
+                        cursor: 'pointer',
+                        backgroundColor: selectedConversation?.id === conv.id ? 'var(--primary-light)' : 'white',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedConversation?.id !== conv.id)
+                          e.currentTarget.style.backgroundColor = 'var(--gray-50)'
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedConversation?.id !== conv.id)
+                          e.currentTarget.style.backgroundColor = 'white'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: 'var(--gray-900)' }}>
+                          {conv.jobTitle}
+                        </p>
+                        <span style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          padding: '2px 8px',
+                          borderRadius: 20,
+                          backgroundColor:
+                            conv.status === 'accepted' ? 'var(--success-light)' :
+                            conv.status === 'declined' ? 'var(--danger-light)' :
+                            conv.status === 'closed' ? 'var(--gray-100)' :
+                            'var(--gray-100)',
+                          color:
+                            conv.status === 'accepted' ? 'var(--success)' :
+                            conv.status === 'declined' ? 'var(--danger)' :
+                            conv.status === 'closed' ? 'var(--gray-500)' :
+                            'var(--gray-500)',
+                        }}>
+                          {conv.status === 'pending' ? 'Pending' :
+                           conv.status === 'accepted' ? 'Accepted' :
+                           conv.status === 'declined' ? 'Declined' :
+                           'Closed'}
+                        </span>
+                      </div>
+                      <p style={{
+                        margin: 0,
+                        fontSize: 13,
+                        color: 'var(--gray-500)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}>
+                        {conv.lastMessage}
+                      </p>
+                    </div>
+                  ))
+              )}
+            </div>
+
+            {/* RIGHT PANEL */}
+            {!selectedConversation ? (
+              <div style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--gray-400)',
+                fontSize: 15,
+                flexDirection: 'column',
+                gap: 12,
+              }}>
+                <span style={{ fontSize: 40 }}>💬</span>
+                <p style={{ margin: 0 }}>Select a conversation to view the applicant</p>
+              </div>
+            ) : (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+
+                {/* Chat header */}
+                <div style={{
+                  padding: '16px 20px',
+                  borderBottom: '1px solid var(--gray-200)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>
+                      {selectedConversation.jobTitle}
+                    </h4>
+                    <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>
+                      {selectedConversation.status === 'pending' && 'Review this application'}
+                      {selectedConversation.status === 'accepted' && '✓ You accepted this applicant'}
+                      {selectedConversation.status === 'declined' && 'You declined this applicant'}
+                      {selectedConversation.status === 'closed' && 'This job has been closed'}
+                    </p>
+                  </div>
+
+                  {/* Accept / Decline buttons — only show when pending */}
+                  {selectedConversation.status === 'pending' && (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => handleAccept(selectedConversation.id)} style={{
+                        padding: '8px 18px',
+                        backgroundColor: 'var(--success)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 6,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontSize: 13,
+                      }}>
+                        ✓ Accept
+                      </button>
+                      <button onClick={() => handleDecline(selectedConversation.id)} style={{
+                        padding: '8px 18px',
+                        backgroundColor: 'var(--danger)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 6,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontSize: 13,
+                      }}>
+                        ✗ Decline
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Messages area */}
+                <div style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  padding: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                  backgroundColor: 'var(--gray-50)',
+                }}>
+                  {messages.map((msg) => {
+                    const isMe = msg.senderId === currentUser.uid
+                    return (
+                      <div key={msg.id} style={{
+                        display: 'flex',
+                        justifyContent: isMe ? 'flex-end' : 'flex-start',
+                      }}>
+                        <div style={{
+                          maxWidth: '65%',
+                          padding: '10px 14px',
+                          borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                          backgroundColor: isMe ? 'var(--primary)' : 'white',
+                          color: isMe ? 'white' : 'var(--gray-900)',
+                          fontSize: 14,
+                          lineHeight: 1.5,
+                          boxShadow: 'var(--shadow-sm)',
+                        }}>
+                          {msg.text}
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input area */}
+                <div style={{
+                  padding: '16px 20px',
+                  borderTop: '1px solid var(--gray-200)',
+                  display: 'flex',
+                  gap: 10,
+                  backgroundColor: 'white',
+                }}>
+                  {selectedConversation.status === 'closed' || selectedConversation.status === 'declined' || selectedConversation.status === 'pending' ? (
+                    <div style={{
+                      flex: 1,
+                      textAlign: 'center',
+                      color: 'var(--gray-400)',
+                      fontSize: 13,
+                      padding: '10px',
+                    }}>
+                      {selectedConversation.status === 'pending' && 'Accept the application to start chatting.'}
+                      {selectedConversation.status === 'declined' && 'This application was declined.'}
+                      {selectedConversation.status === 'closed' && 'This job is closed.'}
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                        placeholder="Type a message..."
+                        style={{
+                          flex: 1,
+                          padding: '10px 14px',
+                          borderRadius: 20,
+                          border: '1px solid var(--gray-300)',
+                          fontSize: 14,
+                          outline: 'none',
+                        }}
+                      />
+                      <button
+                        onClick={handleSendMessage}
+                        disabled={sendingMessage}
+                        style={{
+                          padding: '10px 20px',
+                          backgroundColor: 'var(--primary)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 20,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          fontSize: 14,
+                        }}
+                      >
+                        {sendingMessage ? '...' : 'Send'}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
     </div>
   )

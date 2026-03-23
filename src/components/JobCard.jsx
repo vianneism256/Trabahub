@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { jobService } from '../services/jobService'
+import { conversationService } from '../services/conversationService'
 
 export default function JobCard({ job, currentUserId, onApply, userCategories = [] }) {
   const [showApplyForm, setShowApplyForm] = useState(false)
@@ -7,23 +8,30 @@ export default function JobCard({ job, currentUserId, onApply, userCategories = 
   const [loading, setLoading] = useState(false)
   const [applied, setApplied] = useState(job.applications?.some((a) => a.freelancerId === currentUserId))
 
-  async function handleApply() {
-    if (!message.trim()) {
-      alert('Please enter a message')
-      return
-    }
-    setLoading(true)
-    try {
-      await jobService.applyForJob(job.id, currentUserId, message)
-      setApplied(true)
-      setMessage('')
-      setShowApplyForm(false)
-      onApply?.()
-    } catch (err) {
-      alert(`Error: ${err.message}`)
-    }
-    setLoading(false)
+async function handleApply() {
+  if (!message.trim()) {
+    alert('Please enter a message')
+    return
   }
+  setLoading(true)
+  try {
+    await jobService.applyForJob(job.id, currentUserId, message)
+    await conversationService.createConversation(
+      job.id,
+      job.title,
+      currentUserId,
+      job.customerId,
+      message
+    )
+    setApplied(true)
+    setMessage('')
+    setShowApplyForm(false)
+    onApply?.()
+  } catch (err) {
+    alert(`Error: ${err.message}`)
+  }
+  setLoading(false)
+}
 
   const isRelevant = job.categories.some((c) => userCategories.includes(c))
   const borderColor = isRelevant ? 'var(--primary)' : 'var(--gray-200)'

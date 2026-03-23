@@ -218,7 +218,7 @@ export default function Navigation() {
             }}
           >
             Browse Jobs
-          </button>
+          </button>       
           <button
             onClick={() => navigate('/freelancer', { state: { activeTab: 'my-applications' } })}
             style={{
@@ -234,6 +234,22 @@ export default function Navigation() {
             }}
           >
             My Applications
+          </button>
+          <button
+            onClick={() => navigate('/freelancer', { state: { activeTab: 'messages' } })}
+            style={{
+              padding: '12px 20px',
+              backgroundColor: location.state?.activeTab === 'messages' ? 'var(--primary)' : 'transparent',
+              color: location.state?.activeTab === 'messages' ? 'white' : 'var(--gray-700)',
+              border: 'none',
+              borderRadius: '6px 6px 0 0',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: 14,
+              transition: 'all 0.2s',
+            }}
+          >
+            Messages
           </button>
           <button
             onClick={() => navigate('/freelancer', { state: { activeTab: 'my-profile' } })}
