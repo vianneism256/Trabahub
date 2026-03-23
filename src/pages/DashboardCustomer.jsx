@@ -607,7 +607,27 @@ export default function DashboardCustomer() {
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Messages</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {filteredByJob && (
+                    <button onClick={() => {
+                      setFilteredByJob(null)
+                      setSelectedConversation(null)
+                      setActiveTab('my-jobs')
+                    }} style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--primary)',
+                      fontSize: 20,
+                      lineHeight: 1,
+                      padding: '0 4px',
+                      fontWeight: 700,
+                    }}>
+                      ←
+                    </button>
+                  )}
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Messages</h3>
+                </div>
                 {filteredByJob && (
                   <button onClick={() => setFilteredByJob(null)} style={{
                     fontSize: 12,
