@@ -750,9 +750,8 @@ export default function DashboardCustomer() {
                     </p>
                   </div>
 
-                  {/* Accept / Decline buttons — only show when pending */}
-                  {selectedConversation.status === 'pending' && (
-                    <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {selectedConversation.status === 'pending' && (
                       <button onClick={() => handleAccept(selectedConversation.id)} style={{
                         padding: '8px 18px',
                         backgroundColor: 'var(--success)',
@@ -765,6 +764,8 @@ export default function DashboardCustomer() {
                       }}>
                         ✓ Accept
                       </button>
+                    )}
+                    {(selectedConversation.status === 'pending' || selectedConversation.status === 'accepted') && (
                       <button onClick={() => handleDecline(selectedConversation.id)} style={{
                         padding: '8px 18px',
                         backgroundColor: 'var(--danger)',
@@ -777,8 +778,8 @@ export default function DashboardCustomer() {
                       }}>
                         ✗ Decline
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
                 {/* Messages area */}
