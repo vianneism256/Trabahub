@@ -86,12 +86,14 @@ export default function DashboardFreelancer() {
     try {
       const allJobs = await jobService.getAllOpenJobs()
       setJobs(allJobs)
-      // Track my applications
       const myApps = allJobs.reduce((acc, job) => {
         const userApps = job.applications?.filter((a) => a.freelancerId === currentUser.uid) || []
         return [...acc, ...userApps.map((a) => job.id)]
       }, [])
       setMyApplications(myApps)
+      // Load conversations so we can show status on My Applications
+      const convData = await conversationService.getConversationsByFreelancer(currentUser.uid)
+      setConversations(convData)
     } catch (err) {
       console.error(err)
     }
@@ -277,15 +279,19 @@ export default function DashboardFreelancer() {
               }}>
                 {jobs
                   .filter((j) => myApplications.includes(j.id))
-                  .map((job) => (
-                    <JobCard
-                      key={job.id}
-                      job={job}
-                      currentUserId={currentUser.uid}
-                      userCategories={profile.categories}
-                      onApply={loadJobs}
-                    />
-                  ))}
+                  .map((job) => {
+                    const conv = conversations.find((c) => c.jobId === job.id)
+                    return (
+                      <JobCard
+                        key={job.id}
+                        job={job}
+                        currentUserId={currentUser.uid}
+                        userCategories={profile.categories}
+                        onApply={loadJobs}
+                        applicationStatus={conv?.status || 'pending'}
+                      />
+                    )
+                  })}
               </div>
             )}
           </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { jobService } from '../services/jobService'
 import { conversationService } from '../services/conversationService'
 
-export default function JobCard({ job, currentUserId, onApply, userCategories = [] }) {
+export default function JobCard({ job, currentUserId, onApply, userCategories = [], applicationStatus = null }) {
   const [showApplyForm, setShowApplyForm] = useState(false)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
@@ -247,14 +247,26 @@ async function handleApply() {
         ) : (
           <div style={{
             padding: '12px 16px',
-            backgroundColor: 'var(--success-light)',
-            color: 'var(--success)',
             borderRadius: 6,
             textAlign: 'center',
             fontWeight: 700,
             fontSize: 14,
+            backgroundColor:
+              applicationStatus === 'accepted' ? 'var(--success-light)' :
+              applicationStatus === 'declined' ? 'var(--danger-light)' :
+              applicationStatus === 'closed' ? 'var(--gray-100)' :
+              'var(--success-light)',
+            color:
+              applicationStatus === 'accepted' ? 'var(--success)' :
+              applicationStatus === 'declined' ? 'var(--danger)' :
+              applicationStatus === 'closed' ? 'var(--gray-500)' :
+              'var(--success)',
           }}>
-            ✓ Application Sent
+            {applicationStatus === 'accepted' && '✓ Application Accepted!'}
+            {applicationStatus === 'declined' && '✗ Application Declined'}
+            {applicationStatus === 'closed' && 'Job Closed'}
+            {applicationStatus === 'pending' && '⏳ Application Pending'}
+            {!applicationStatus && '✓ Application Sent'}
           </div>
         )}
       </div>
