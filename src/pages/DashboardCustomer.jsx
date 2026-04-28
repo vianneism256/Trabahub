@@ -397,7 +397,7 @@ export default function DashboardCustomer() {
                         }}>
                           View Applicants
                         </button>
-                        {job.status === 'open' && (
+                        {job.status === 'open' ? (
                           <button onClick={() => handleCloseJob(job.id)} style={{
                             padding: '8px 16px',
                             backgroundColor: 'var(--danger)',
@@ -409,6 +409,19 @@ export default function DashboardCustomer() {
                             fontWeight: 600,
                           }}>
                             Close Job
+                          </button>
+                        ) : (
+                          <button onClick={() => handleReopenJob(job.id)} style={{
+                            padding: '8px 16px',
+                            backgroundColor: 'var(--success)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            fontSize: 13,
+                            fontWeight: 600,
+                          }}>
+                            Reopen Job
                           </button>
                         )}
                       </div>
