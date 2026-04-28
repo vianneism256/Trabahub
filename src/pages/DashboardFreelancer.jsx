@@ -5,6 +5,8 @@ import { freelancerService } from '../services/freelancerService'
 import { jobService } from '../services/jobService'
 import { conversationService } from '../services/conversationService'
 import JobCard from '../components/JobCard'
+import { reviewService } from '../services/reviewService'
+import StarRating from '../components/StarRating'
 
 export default function DashboardFreelancer() {
   const { currentUser } = useAuth()
@@ -30,6 +32,7 @@ export default function DashboardFreelancer() {
   const [newMessage, setNewMessage] = useState('')
   const [sendingMessage, setSendingMessage] = useState(false)
   const messagesEndRef = useRef(null)
+  const [reviews, setReviews] = useState([])
 
 
   useEffect(() => {
@@ -96,6 +99,15 @@ export default function DashboardFreelancer() {
     )
     return () => unsubscribe()
   }, [selectedConversation])
+
+  useEffect(() => {
+    if (!currentUser) return
+    const unsubReviews = reviewService.listenToFreelancerReviews(
+      currentUser.uid,
+      (data) => setReviews(data)
+    )
+    return () => unsubReviews()
+  }, [currentUser])
 
 
 

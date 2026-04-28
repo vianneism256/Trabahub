@@ -4,6 +4,9 @@ import { useLocation } from 'react-router-dom'
 import { freelancerService } from '../services/freelancerService'
 import { jobService } from '../services/jobService'
 import { conversationService } from '../services/conversationService'
+import { reviewService } from '../services/reviewService'
+import StarRating from '../components/StarRating'
+
 
 export default function DashboardCustomer() {
   const { currentUser } = useAuth()
@@ -30,6 +33,10 @@ export default function DashboardCustomer() {
   const [sendingMessage, setSendingMessage] = useState(false)
   const messagesEndRef = useRef(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [reviewForm, setReviewForm] = useState({ rating: 0, comment: '' })
+  const [reviewingConvId, setReviewingConvId] = useState(null)
+  const [reviewSubmitted, setReviewSubmitted] = useState([])
+  const [reviewLoading, setReviewLoading] = useState(false)
 
   
   useEffect(() => {
@@ -213,6 +220,31 @@ export default function DashboardCustomer() {
       alert(`Error: ${err.message}`)
     }
     setSendingMessage(false)
+  }
+
+
+  async function handleSubmitReview() {
+    if (!reviewForm.rating) {
+      alert('Please select a star rating')
+      return
+    }
+    setReviewLoading(true)
+    try {
+      await reviewService.submitReview(
+        selectedConversation.freelancerId,
+        currentUser.uid,
+        selectedConversation.jobId,
+        selectedConversation.jobTitle,
+        reviewForm.rating,
+        reviewForm.comment
+      )
+      setReviewSubmitted((prev) => [...prev, selectedConversation.id])
+      setReviewingConvId(null)
+      setReviewForm({ rating: 0, comment: '' })
+    } catch (err) {
+      alert(err.message)
+    }
+    setReviewLoading(false)
   }
 
   function handleViewApplicants(jobId) {
@@ -584,6 +616,14 @@ export default function DashboardCustomer() {
                             fontSize: 12,
                             fontWeight: 600,
                           }}>✓ Verified</span>
+                          {freelancer.averageRating && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
+                              <StarRating value={freelancer.averageRating} size={14} />
+                              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>
+                                {freelancer.averageRating} ({freelancer.totalReviews})
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -849,6 +889,80 @@ export default function DashboardCustomer() {
                     )}
                   </div>
                 </div>
+
+                {/* Leave a review — only when closed and was accepted */}
+                {selectedConversation.status === 'closed' &&
+                  !reviewSubmitted.includes(selectedConversation.id) && (
+                  <div style={{
+                    padding: '12px 20px',
+                    borderBottom: '1px solid var(--gray-200)',
+                    backgroundColor: 'var(--primary-light)',
+                  }}>
+                    {reviewingConvId !== selectedConversation.id ? (
+                      <button onClick={() => setReviewingConvId(selectedConversation.id)} style={{
+                        padding: '8px 16px',
+                        backgroundColor: 'var(--primary)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 6,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontSize: 13,
+                      }}>
+                        ★ Leave a Review
+                      </button>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Rate this freelancer:</p>
+                        <StarRating
+                          value={reviewForm.rating}
+                          onChange={(r) => setReviewForm((prev) => ({ ...prev, rating: r }))}
+                          size={28}
+                        />
+                        <textarea
+                          value={reviewForm.comment}
+                          onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))}
+                          placeholder="Leave a comment (optional)..."
+                          style={{
+                            padding: 10,
+                            borderRadius: 6,
+                            border: '1px solid var(--gray-300)',
+                            fontFamily: 'inherit',
+                            fontSize: 13,
+                            minHeight: 70,
+                            resize: 'none',
+                          }}
+                        />
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={handleSubmitReview} disabled={reviewLoading} style={{
+                            padding: '8px 16px',
+                            backgroundColor: 'var(--success)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 6,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontSize: 13,
+                          }}>
+                            {reviewLoading ? 'Submitting...' : 'Submit Review'}
+                          </button>
+                          <button onClick={() => setReviewingConvId(null)} style={{
+                            padding: '8px 16px',
+                            backgroundColor: 'var(--gray-200)',
+                            color: 'var(--gray-700)',
+                            border: 'none',
+                            borderRadius: 6,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontSize: 13,
+                          }}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Messages area */}
                 <div style={{
