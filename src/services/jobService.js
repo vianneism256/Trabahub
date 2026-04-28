@@ -86,4 +86,9 @@ export const jobService = {
       callback(data)
     })
   },
+
+  async reopenJob(jobId) {
+    const ref = doc(db, 'jobs', jobId)
+    await updateDoc(ref, { status: 'open', updatedAt: Date.now() })
+  },
 }

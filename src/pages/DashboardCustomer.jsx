@@ -166,6 +166,14 @@ export default function DashboardCustomer() {
     }
   }
 
+  async function handleReopenJob(jobId) {
+    try {
+      await jobService.reopenJob(jobId)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
 
 
   async function handleAccept(conversationId) {
