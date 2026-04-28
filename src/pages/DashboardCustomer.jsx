@@ -219,6 +219,7 @@ async function handleAccept(conversationId) {
     }
     try {
       await conversationService.updateStatus(conversationId, 'accepted')
+      await jobService.updateJobStatus(selectedConversation.jobId, 'closed')
       setSelectedConversation((prev) => ({ ...prev, status: 'accepted' }))
       setAssigningConvId(null)
       setConfirmText('')
@@ -1391,3 +1392,4 @@ async function handleAccept(conversationId) {
     </div>
   )
 }
+
