@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { jobService } from '../services/jobService'
 import { conversationService } from '../services/conversationService'
+import { freelancerService } from '../services/freelancerService'
 
 export default function JobCard({ job, currentUserId, onApply, userCategories = [], applicationStatus = null }) {
   const [showApplyForm, setShowApplyForm] = useState(false)
@@ -9,29 +10,31 @@ export default function JobCard({ job, currentUserId, onApply, userCategories = 
   const [applied, setApplied] = useState(job.applications?.some((a) => a.freelancerId === currentUserId))
 
 async function handleApply() {
-  if (!message.trim()) {
-    alert('Please enter a message')
-    return
+    if (!message.trim()) {
+      alert('Please enter a message')
+      return
+    }
+    setLoading(true)
+    try {
+      await jobService.applyForJob(job.id, currentUserId, message)
+      const profile = await freelancerService.getProfile(currentUserId)
+      await conversationService.createConversation(
+        job.id,
+        job.title,
+        currentUserId,
+        profile?.displayName || 'Freelancer',
+        job.customerId,
+        message
+      )
+      setApplied(true)
+      setMessage('')
+      setShowApplyForm(false)
+      onApply?.()
+    } catch (err) {
+      alert(`Error: ${err.message}`)
+    }
+    setLoading(false)
   }
-  setLoading(true)
-  try {
-    await jobService.applyForJob(job.id, currentUserId, message)
-    await conversationService.createConversation(
-      job.id,
-      job.title,
-      currentUserId,
-      job.customerId,
-      message
-    )
-    setApplied(true)
-    setMessage('')
-    setShowApplyForm(false)
-    onApply?.()
-  } catch (err) {
-    alert(`Error: ${err.message}`)
-  }
-  setLoading(false)
-}
 
 async function handleWithdraw() {
     if (!window.confirm('Are you sure you want to withdraw this application?')) return

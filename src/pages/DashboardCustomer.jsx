@@ -37,6 +37,8 @@ export default function DashboardCustomer() {
   const [reviewingConvId, setReviewingConvId] = useState(null)
   const [reviewSubmitted, setReviewSubmitted] = useState([])
   const [reviewLoading, setReviewLoading] = useState(false)
+  const [assigningConvId, setAssigningConvId] = useState(null)
+  const [confirmText, setConfirmText] = useState('')
 
   
   useEffect(() => {
@@ -185,11 +187,16 @@ export default function DashboardCustomer() {
 
 
 
-  async function handleAccept(conversationId) {
+async function handleAccept(conversationId) {
+    if (confirmText !== 'CONFIRM') {
+      alert('Please type CONFIRM to assign this freelancer')
+      return
+    }
     try {
       await conversationService.updateStatus(conversationId, 'accepted')
       setSelectedConversation((prev) => ({ ...prev, status: 'accepted' }))
-
+      setAssigningConvId(null)
+      setConfirmText('')
     } catch (err) {
       console.error(err)
     }
@@ -803,9 +810,15 @@ export default function DashboardCustomer() {
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+
+                      <div>
                         <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: 'var(--gray-900)' }}>
+                          {conv.freelancerName || 'Freelancer'}
+                        </p>
+                        <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>
                           {conv.jobTitle}
                         </p>
+                      </div>
                         <span style={{
                           fontSize: 11,
                           fontWeight: 600,
@@ -871,30 +884,73 @@ export default function DashboardCustomer() {
                 }}>
                   <div>
                     <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>
-                      {selectedConversation.jobTitle}
+                      {selectedConversation.freelancerName || 'Freelancer'}
                     </h4>
                     <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>
-                      {selectedConversation.status === 'pending' && 'Review this application'}
-                      {selectedConversation.status === 'accepted' && '✓ You accepted this applicant'}
-                      {selectedConversation.status === 'declined' && 'You declined this applicant'}
-                      {selectedConversation.status === 'closed' && 'This job has been closed'}
+                      {selectedConversation.jobTitle} • {selectedConversation.status === 'pending' ? 'Reviewing application' :
+                      selectedConversation.status === 'accepted' ? '✓ Assigned' :
+                      selectedConversation.status === 'declined' ? 'Declined' : 'Closed'}
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'end', gap: 8 }}>
                     {selectedConversation.status === 'pending' && (
-                      <button onClick={() => handleAccept(selectedConversation.id)} style={{
-                        padding: '8px 18px',
-                        backgroundColor: 'var(--success)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 6,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        fontSize: 13,
-                      }}>
-                        ✓ Accept
-                      </button>
+                      <>
+                        {assigningConvId === selectedConversation.id ? (
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <input
+                              type="text"
+                              value={confirmText}
+                              onChange={(e) => setConfirmText(e.target.value)}
+                              placeholder='Type CONFIRM to assign'
+                              style={{
+                                padding: '8px 12px',
+                                borderRadius: 6,
+                                border: '1px solid var(--gray-300)',
+                                fontSize: 13,
+                                width: 180,
+                              }}
+                            />
+                            <button onClick={() => handleAccept(selectedConversation.id)} style={{
+                              padding: '8px 16px',
+                              backgroundColor: 'var(--success)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 6,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              fontSize: 13,
+                            }}>
+                              ✓ Confirm
+                            </button>
+                            <button onClick={() => { setAssigningConvId(null); setConfirmText('') }} style={{
+                              padding: '8px 16px',
+                              backgroundColor: 'var(--gray-200)',
+                              color: 'var(--gray-700)',
+                              border: 'none',
+                              borderRadius: 6,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              fontSize: 13,
+                            }}>
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setAssigningConvId(selectedConversation.id)} style={{
+                            padding: '8px 18px',
+                            backgroundColor: 'var(--success)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 6,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontSize: 13,
+                          }}>
+                            ✓ Assign Freelancer
+                          </button>
+                        )}
+                      </>
                     )}
                     {(selectedConversation.status === 'pending' || selectedConversation.status === 'accepted') && (
                       <button onClick={() => handleDecline(selectedConversation.id)} style={{
@@ -1030,7 +1086,7 @@ export default function DashboardCustomer() {
                   gap: 10,
                   backgroundColor: 'white',
                 }}>
-                  {selectedConversation.status === 'closed' || selectedConversation.status === 'declined' || selectedConversation.status === 'pending' ? (
+                  {selectedConversation.status === 'closed' || selectedConversation.status === 'declined' ? (
                     <div style={{
                       flex: 1,
                       textAlign: 'center',
@@ -1038,7 +1094,6 @@ export default function DashboardCustomer() {
                       fontSize: 13,
                       padding: '10px',
                     }}>
-                      {selectedConversation.status === 'pending' && 'Accept the application to start chatting.'}
                       {selectedConversation.status === 'declined' && 'This application was declined.'}
                       {selectedConversation.status === 'closed' && 'This job is closed.'}
                     </div>

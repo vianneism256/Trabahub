@@ -516,12 +516,7 @@ export default function DashboardFreelancer() {
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                        placeholder={
-                          selectedConversation.status === 'pending'
-                            ? 'Waiting for acceptance before chatting...'
-                            : 'Type a message...'
-                        }
-                        disabled={selectedConversation.status === 'pending'}
+                        placeholder="Type a message..."
                         style={{
                           flex: 1,
                           padding: '10px 14px',
@@ -529,12 +524,11 @@ export default function DashboardFreelancer() {
                           border: '1px solid var(--gray-300)',
                           fontSize: 14,
                           outline: 'none',
-                          backgroundColor: selectedConversation.status === 'pending' ? 'var(--gray-50)' : 'white',
                         }}
                       />
                       <button
                         onClick={handleSendMessage}
-                        disabled={sendingMessage || selectedConversation.status === 'pending'}
+                        disabled={sendingMessage}
                         style={{
                           padding: '10px 20px',
                           backgroundColor: 'var(--primary)',
@@ -544,7 +538,6 @@ export default function DashboardFreelancer() {
                           fontWeight: 600,
                           cursor: 'pointer',
                           fontSize: 14,
-                          opacity: selectedConversation.status === 'pending' ? 0.5 : 1,
                         }}
                       >
                         {sendingMessage ? '...' : 'Send'}
