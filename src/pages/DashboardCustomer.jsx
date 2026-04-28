@@ -189,7 +189,7 @@ export default function DashboardCustomer() {
     try {
       await conversationService.updateStatus(conversationId, 'accepted')
       setSelectedConversation((prev) => ({ ...prev, status: 'accepted' }))
-      await loadConversations()
+
     } catch (err) {
       console.error(err)
     }
@@ -199,7 +199,7 @@ export default function DashboardCustomer() {
     try {
       await conversationService.updateStatus(conversationId, 'declined')
       setSelectedConversation((prev) => ({ ...prev, status: 'declined' }))
-      await loadConversations()
+
     } catch (err) {
       console.error(err)
     }
@@ -215,7 +215,6 @@ export default function DashboardCustomer() {
         newMessage
       )
       setNewMessage('')
-      await loadConversations()
     } catch (err) {
       alert(`Error: ${err.message}`)
     }
@@ -603,10 +602,33 @@ export default function DashboardCustomer() {
                   }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-lg)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-sm)'}>
                     <div style={{ padding: 24 }}>
                       <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', marginBottom: 12 }}>
-                        <div>
-                          <h3 style={{ margin: 0, marginBottom: 4 }}>
-                            {freelancer.displayName || 'Professional'}
-                          </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            backgroundColor: 'var(--gray-200)',
+                            flexShrink: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 20,
+                          }}>
+                            {freelancer.photoURL ? (
+                              <img
+                                src={freelancer.photoURL}
+                                alt={freelancer.displayName}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              '👤'
+                            )}
+                          </div>
+                          <div>
+                            <h3 style={{ margin: 0, marginBottom: 4 }}>
+                              {freelancer.displayName || 'Professional'}
+                            </h3>
                           <span style={{
                             display: 'inline-block',
                             backgroundColor: 'var(--success-light)',
@@ -624,6 +646,7 @@ export default function DashboardCustomer() {
                               </span>
                             </div>
                           )}
+                          </div>
                         </div>
                       </div>
 
