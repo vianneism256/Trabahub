@@ -221,7 +221,27 @@ export default function Navigation() {
             My Jobs
           </button>
           <BadgeTab label="Messages" tabName="messages" route="/customer" />
+          
+<button
+            onClick={() => navigate('/customer', { state: { activeTab: 'my-profile' } })}
+            style={{
+              padding: '12px 20px',
+              backgroundColor: location.state?.activeTab === 'my-profile' ? 'var(--primary)' : 'transparent',
+              color: location.state?.activeTab === 'my-profile' ? 'white' : 'var(--gray-700)',
+              border: 'none',
+              borderRadius: '6px 6px 0 0',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: 14,
+              transition: 'all 0.2s',
+            }}
+          >
+            My Profile
+          </button>
+
         </div>
+        
+        
       )}
 
       {/* Freelancer tabs */}

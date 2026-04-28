@@ -17,13 +17,19 @@ async function handleApply() {
     setLoading(true)
     try {
       await jobService.applyForJob(job.id, currentUserId, message)
-      const profile = await freelancerService.getProfile(currentUserId)
+      const [freelancerProfile, customerProfile] = await Promise.all([
+        freelancerService.getProfile(currentUserId),
+        customerService.getProfile(job.customerId),
+      ])
       await conversationService.createConversation(
         job.id,
         job.title,
         currentUserId,
-        profile?.displayName || 'Freelancer',
+        freelancerProfile?.displayName || 'Freelancer',
+        freelancerProfile?.photoURL || null,
         job.customerId,
+        customerProfile?.displayName || 'Customer',
+        customerProfile?.photoURL || null,
         message
       )
       setApplied(true)
@@ -35,7 +41,6 @@ async function handleApply() {
     }
     setLoading(false)
   }
-
 async function handleWithdraw() {
     if (!window.confirm('Are you sure you want to withdraw this application?')) return
     setLoading(true)

@@ -6,6 +6,7 @@ import { jobService } from '../services/jobService'
 import { conversationService } from '../services/conversationService'
 import { reviewService } from '../services/reviewService'
 import StarRating from '../components/StarRating'
+import { customerService } from '../services/customerService'
 
 
 export default function DashboardCustomer() {
@@ -39,6 +40,15 @@ export default function DashboardCustomer() {
   const [reviewLoading, setReviewLoading] = useState(false)
   const [assigningConvId, setAssigningConvId] = useState(null)
   const [confirmText, setConfirmText] = useState('')
+  const [customerProfile, setCustomerProfile] = useState({
+  displayName: '',
+  email: '',
+  phone: '',
+})
+const [isEditingProfile, setIsEditingProfile] = useState(false)
+const [profileMessage, setProfileMessage] = useState('')
+const [photoUploading, setPhotoUploading] = useState(false)
+const [profileLoading, setProfileLoading] = useState(false)
 
   
   useEffect(() => {
@@ -101,6 +111,21 @@ export default function DashboardCustomer() {
     const updated = conversations.find((c) => c.id === selectedConversation.id)
     if (updated) setSelectedConversation(updated)
   }, [conversations])
+
+
+  useEffect(() => {
+    if (!currentUser) return
+    loadCustomerProfile()
+  }, [currentUser])
+
+  async function loadCustomerProfile() {
+    try {
+      const data = await customerService.getProfile(currentUser.uid)
+      if (data) setCustomerProfile(data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
 
 
@@ -226,6 +251,50 @@ async function handleAccept(conversationId) {
       alert(`Error: ${err.message}`)
     }
     setSendingMessage(false)
+  }
+
+  function handleProfileChange(e) {
+    const { name, value } = e.target
+    setCustomerProfile((prev) => ({ ...prev, [name]: value }))
+  }
+
+  async function handleSaveProfile() {
+    setProfileLoading(true)
+    setProfileMessage('')
+    try {
+      if (!customerProfile.displayName) {
+        setProfileMessage('Please enter your name')
+        setProfileLoading(false)
+        return
+      }
+      await customerService.saveProfile(currentUser.uid, customerProfile)
+      setProfileMessage('✓ Profile saved successfully!')
+      setTimeout(() => setProfileMessage(''), 3000)
+    } catch (err) {
+      setProfileMessage(`Error: ${err.message}`)
+    }
+    setProfileLoading(false)
+  }
+
+  async function handlePhotoUpload(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be under 5MB')
+      return
+    }
+    setPhotoUploading(true)
+    try {
+      const url = await customerService.uploadProfilePhoto(currentUser.uid, file)
+      setCustomerProfile((prev) => ({ ...prev, photoURL: url }))
+    } catch (err) {
+      alert(`Error: ${err.message}`)
+    }
+    setPhotoUploading(false)
   }
 
 
@@ -811,13 +880,25 @@ async function handleAccept(conversationId) {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
 
-                      <div>
-                        <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: 'var(--gray-900)' }}>
-                          {conv.freelancerName || 'Freelancer'}
-                        </p>
-                        <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>
-                          {conv.jobTitle}
-                        </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{
+                          width: 40, height: 40, borderRadius: '50%',
+                          overflow: 'hidden', backgroundColor: 'var(--gray-200)',
+                          flexShrink: 0, display: 'flex', alignItems: 'center',
+                          justifyContent: 'center', fontSize: 18,
+                        }}>
+                          {conv.freelancerPhoto
+                            ? <img src={conv.freelancerPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : '👤'}
+                        </div>
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: 'var(--gray-900)' }}>
+                            {conv.freelancerName || 'Freelancer'}
+                          </p>
+                          <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>
+                            {conv.jobTitle}
+                          </p>
+                        </div>
                       </div>
                         <span style={{
                           fontSize: 11,
@@ -1139,7 +1220,162 @@ async function handleAccept(conversationId) {
           </div>
         )}
 
+        
+
       </div>
+
+      {/* My Profile Tab */}
+        {activeTab === 'my-profile' && (
+          <div>
+            {!isEditingProfile ? (
+              <div style={{
+                backgroundColor: 'white',
+                padding: 32,
+                borderRadius: 8,
+                boxShadow: 'var(--shadow-sm)',
+                maxWidth: 800,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                  <h2 style={{ margin: 0 }}>Your Profile</h2>
+                  <button onClick={() => setIsEditingProfile(true)} style={{
+                    padding: '10px 20px',
+                    backgroundColor: 'var(--primary)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: 14,
+                  }}>
+                    Edit Profile
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gap: 24 }}>
+                  {/* Profile Photo */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                    <div style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      backgroundColor: 'var(--gray-200)',
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 32,
+                    }}>
+                      {customerProfile.photoURL ? (
+                        <img src={customerProfile.photoURL} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : '👤'}
+                    </div>
+                    <div>
+                      <p style={{ fontWeight: 600, marginBottom: 8, fontSize: 14 }}>Profile Photo</p>
+                      <label style={{
+                        padding: '8px 16px',
+                        backgroundColor: 'var(--primary)',
+                        color: 'white',
+                        borderRadius: 6,
+                        cursor: 'pointer',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        display: 'inline-block',
+                      }}>
+                        {photoUploading ? 'Uploading...' : customerProfile.photoURL ? 'Change Photo' : 'Upload Photo'}
+                        <input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={photoUploading} style={{ display: 'none' }} />
+                      </label>
+                      <p style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 6 }}>Max 5MB. JPG, PNG, or GIF.</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Name</p>
+                    <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--gray-900)', margin: 0 }}>{customerProfile.displayName || '—'}</p>
+                  </div>
+
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Email</p>
+                    <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--gray-900)', margin: 0 }}>{customerProfile.email || '—'}</p>
+                  </div>
+
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Phone</p>
+                    <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--gray-900)', margin: 0 }}>
+                      {customerProfile.phone ? <a href={`tel:${customerProfile.phone}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>{customerProfile.phone}</a> : '—'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{
+                backgroundColor: 'white',
+                padding: 32,
+                borderRadius: 8,
+                boxShadow: 'var(--shadow-sm)',
+                maxWidth: 800,
+              }}>
+                <h2 style={{ marginBottom: 24 }}>Edit Your Profile</h2>
+
+                {profileMessage && (
+                  <div style={{
+                    padding: 12,
+                    marginBottom: 24,
+                    borderRadius: 6,
+                    backgroundColor: profileMessage.includes('Error') || profileMessage.includes('Please') ? 'var(--danger-light)' : 'var(--success-light)',
+                    color: profileMessage.includes('Error') || profileMessage.includes('Please') ? 'var(--danger)' : 'var(--success)',
+                    fontWeight: 600,
+                  }}>
+                    {profileMessage}
+                  </div>
+                )}
+
+                <div style={{ display: 'grid', gap: 24 }}>
+                  <div>
+                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Display Name</label>
+                    <input type="text" name="displayName" value={customerProfile.displayName} onChange={handleProfileChange} placeholder="Your name" />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Email</label>
+                    <input type="email" name="email" value={customerProfile.email} onChange={handleProfileChange} placeholder="your@email.com" />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Phone (optional)</label>
+                    <input type="tel" name="phone" value={customerProfile.phone} onChange={handleProfileChange} placeholder="(555) 123-4567" />
+                  </div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <button onClick={handleSaveProfile} disabled={profileLoading} style={{
+                      flex: 1,
+                      padding: '14px 24px',
+                      backgroundColor: 'var(--success)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: 6,
+                      fontSize: 16,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}>
+                      {profileLoading ? 'Saving...' : 'Save Profile'}
+                    </button>
+                    <button onClick={() => { setIsEditingProfile(false); setProfileMessage('') }} style={{
+                      flex: 1,
+                      padding: '14px 24px',
+                      backgroundColor: 'var(--gray-200)',
+                      color: 'var(--gray-800)',
+                      border: 'none',
+                      borderRadius: 6,
+                      fontSize: 16,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
     </div>
   )
 }

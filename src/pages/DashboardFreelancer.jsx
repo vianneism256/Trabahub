@@ -377,9 +377,21 @@ export default function DashboardFreelancer() {
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{
+                        width: 40, height: 40, borderRadius: '50%',
+                        overflow: 'hidden', backgroundColor: 'var(--gray-200)',
+                        flexShrink: 0, display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: 18,
+                      }}>
+                        {conv.customerPhoto
+                          ? <img src={conv.customerPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : '👤'}
+                      </div>
                       <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: 'var(--gray-900)' }}>
                         {conv.jobTitle}
                       </p>
+                    </div>
                       <span style={{
                         fontSize: 11,
                         fontWeight: 600,
@@ -444,12 +456,24 @@ export default function DashboardFreelancer() {
                   alignItems: 'center',
                 }}>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>
-                      {selectedConversation.jobTitle}
-                    </h4>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{
+                        width: 44, height: 44, borderRadius: '50%',
+                        overflow: 'hidden', backgroundColor: 'var(--gray-200)',
+                        flexShrink: 0, display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: 20,
+                      }}>
+                        {selectedConversation.customerPhoto
+                          ? <img src={selectedConversation.customerPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : '👤'}
+                      </div>
+                      <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>
+                        {selectedConversation.jobTitle}
+                      </h4>
+                    </div>
                     <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>
-                      {selectedConversation.status === 'pending' && 'Waiting for customer to accept...'}
-                      {selectedConversation.status === 'accepted' && '✓ Customer accepted your application'}
+                      {selectedConversation.status === 'pending' && 'Application under review'}
+                      {selectedConversation.status === 'accepted' && '✓ You have been assigned to this job!'}
                       {selectedConversation.status === 'declined' && 'Customer declined this application'}
                       {selectedConversation.status === 'closed' && 'This job has been closed'}
                     </p>

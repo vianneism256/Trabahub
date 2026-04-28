@@ -31,8 +31,11 @@ async createConversation(jobId, jobTitle, freelancerId, freelancerName, customer
       jobTitle,
       freelancerId,
       freelancerName,
+      freelancerPhoto: freelancerPhoto || null,
       customerId,
-      status: 'pending', // pending | accepted | declined | closed
+      customerName: customerName || 'Customer',
+      customerPhoto: customerPhoto || null,
+      status: 'pending',
       lastMessage: firstMessage,
       lastMessageAt: Date.now(),
       createdAt: Date.now(),
