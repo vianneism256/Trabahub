@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react'
 import { collection, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebaseConfig'
 import { freelancerService } from '../services/freelancerService'
+import { jobService } from '../services/jobService'
 
 export default function DashboardAdmin() {
   const [freelancers, setFreelancers] = useState([])
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('freelancers')
+  const [jobs, setJobs] = useState([])
 
-  useEffect(() => {
+useEffect(() => {
     setLoading(true)
 
     const unsubFreelancers = onSnapshot(collection(db, 'freelancers'), (snap) => {
@@ -21,9 +23,14 @@ export default function DashboardAdmin() {
       setUsers(snap.docs.map((d) => d.data()))
     })
 
+    const unsubJobs = onSnapshot(collection(db, 'jobs'), (snap) => {
+      setJobs(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+    })
+
     return () => {
       unsubFreelancers()
       unsubUsers()
+      unsubJobs()
     }
   }, [])
 
@@ -43,6 +50,104 @@ export default function DashboardAdmin() {
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         <h1>Admin Dashboard</h1>
         <p style={{ color: 'var(--gray-600)', marginBottom: 32 }}>Manage freelancers and users</p>
+
+        {/* Stats Bar */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 16,
+          marginBottom: 32,
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: 24,
+            borderRadius: 8,
+            boxShadow: 'var(--shadow-sm)',
+            border: '1px solid var(--gray-200)',
+          }}>
+            <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+              Total Users
+            </p>
+            <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--gray-900)', margin: 0 }}>
+              {users.length}
+            </p>
+          </div>
+
+          <div style={{
+            backgroundColor: 'white',
+            padding: 24,
+            borderRadius: 8,
+            boxShadow: 'var(--shadow-sm)',
+            border: '1px solid var(--gray-200)',
+          }}>
+            <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+              Total Freelancers
+            </p>
+            <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)', margin: 0 }}>
+              {freelancers.length}
+            </p>
+          </div>
+
+          <div style={{
+            backgroundColor: 'white',
+            padding: 24,
+            borderRadius: 8,
+            boxShadow: 'var(--shadow-sm)',
+            border: '1px solid var(--gray-200)',
+          }}>
+            <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+              Verified Freelancers
+            </p>
+            <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--success)', margin: 0 }}>
+              {freelancers.filter((f) => f.verified).length}
+            </p>
+          </div>
+
+          <div style={{
+            backgroundColor: 'white',
+            padding: 24,
+            borderRadius: 8,
+            boxShadow: 'var(--shadow-sm)',
+            border: '1px solid var(--gray-200)',
+          }}>
+            <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+              Open Jobs
+            </p>
+            <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--success)', margin: 0 }}>
+              {jobs.filter((j) => j.status === 'open').length}
+            </p>
+          </div>
+
+          <div style={{
+            backgroundColor: 'white',
+            padding: 24,
+            borderRadius: 8,
+            boxShadow: 'var(--shadow-sm)',
+            border: '1px solid var(--gray-200)',
+          }}>
+            <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+              Closed Jobs
+            </p>
+            <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--gray-500)', margin: 0 }}>
+              {jobs.filter((j) => j.status === 'closed').length}
+            </p>
+          </div>
+
+          <div style={{
+            backgroundColor: 'white',
+            padding: 24,
+            borderRadius: 8,
+            boxShadow: 'var(--shadow-sm)',
+            border: '1px solid var(--gray-200)',
+          }}>
+            <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+              Total Customers
+            </p>
+            <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)', margin: 0 }}>
+              {users.filter((u) => u.role === 'customer').length}
+            </p>
+          </div>
+        </div>
 
         <div style={{
           display: 'flex',
