@@ -97,22 +97,7 @@ export default function DashboardFreelancer() {
     return () => unsubscribe()
   }, [selectedConversation])
 
-  async function loadJobs() {
-    try {
-      const allJobs = await jobService.getAllOpenJobs()
-      setJobs(allJobs)
-      const myApps = allJobs.reduce((acc, job) => {
-        const userApps = job.applications?.filter((a) => a.freelancerId === currentUser.uid) || []
-        return [...acc, ...userApps.map((a) => job.id)]
-      }, [])
-      setMyApplications(myApps)
-      // Load conversations so we can show status on My Applications
-      const convData = await conversationService.getConversationsByFreelancer(currentUser.uid)
-      setConversations(convData)
-    } catch (err) {
-      console.error(err)
-    }
-  }
+
 
   function filterJobs() {
     let filtered = jobs
@@ -122,14 +107,7 @@ export default function DashboardFreelancer() {
     setFilteredJobs(filtered)
   }
 
-  async function loadConversations() {
-    try {
-      const data = await conversationService.getConversationsByFreelancer(currentUser.uid)
-      setConversations(data)
-    } catch (err) {
-      console.error(err)
-    }
-  }
+
 
   async function handleSendMessage() {
     if (!newMessage.trim() || !selectedConversation) return

@@ -91,14 +91,7 @@ export default function DashboardCustomer() {
     if (updated) setSelectedConversation(updated)
   }, [conversations])
 
-  async function loadCustomerJobs() {
-    try {
-      const jobs = await jobService.getJobsByCustomer(currentUser.uid)
-      setCustomerJobs(jobs)
-    } catch (err) {
-      console.error(err)
-    }
-  }
+
 
   async function loadFreelancers() {
     setLoading(true)
@@ -159,7 +152,6 @@ export default function DashboardCustomer() {
   async function handleCloseJob(jobId) {
     try {
       await jobService.updateJobStatus(jobId, 'closed')
-      await loadCustomerJobs()
     } catch (err) {
       console.error(err)
     }
@@ -174,14 +166,7 @@ export default function DashboardCustomer() {
     }
   }
 
-  async function loadConversations() {
-    try {
-      const data = await conversationService.getConversationsByCustomer(currentUser.uid)
-      setConversations(data)
-    } catch (err) {
-      console.error(err)
-    }
-  }
+
 
   async function handleAccept(conversationId) {
     try {
