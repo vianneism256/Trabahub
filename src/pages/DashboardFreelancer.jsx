@@ -260,7 +260,7 @@ export default function DashboardFreelancer() {
             ) : (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+                gridTemplateColumns: '1fr',
                 gap: 20,
               }}>
                 {filteredJobs.map((job) => (
