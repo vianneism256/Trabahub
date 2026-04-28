@@ -3,18 +3,47 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthProvider'
 import { getDoc, doc } from 'firebase/firestore'
 import { db } from '../firebaseConfig'
+import { conversationService } from '../services/conversationService'
 
 export default function Navigation() {
   const { currentUser, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [userRole, setUserRole] = useState(null)
+  const [messageBadge, setMessageBadge] = useState(0)
 
   useEffect(() => {
     if (currentUser) {
       loadUserRole()
     }
   }, [currentUser])
+
+
+  useEffect(() => {
+    if (!currentUser || !userRole) return
+
+    let unsubscribe
+
+    if (userRole === 'freelancer') {
+      unsubscribe = conversationService.listenToFreelancerConversations(
+        currentUser.uid,
+        (convs) => {
+          const count = convs.filter((c) => c.status === 'accepted').length
+          setMessageBadge(count)
+        }
+      )
+    } else if (userRole === 'customer') {
+      unsubscribe = conversationService.listenToCustomerConversations(
+        currentUser.uid,
+        (convs) => {
+          const count = convs.filter((c) => c.status === 'pending').length
+          setMessageBadge(count)
+        }
+      )
+    }
+
+    return () => unsubscribe?.()
+  }, [currentUser, userRole])
 
   async function loadUserRole() {
     try {
@@ -175,7 +204,7 @@ export default function Navigation() {
           >
             Post a Job
           </button>
-          <button
+<button
             onClick={() => navigate('/customer', { state: { activeTab: 'my-jobs' } })}
             style={{
               padding: '12px 20px',
@@ -191,6 +220,7 @@ export default function Navigation() {
           >
             My Jobs
           </button>
+          <BadgeTab label="Messages" tabName="messages" route="/customer" />
         </div>
       )}
 
@@ -235,22 +265,7 @@ export default function Navigation() {
           >
             My Applications
           </button>
-          <button
-            onClick={() => navigate('/freelancer', { state: { activeTab: 'messages' } })}
-            style={{
-              padding: '12px 20px',
-              backgroundColor: location.state?.activeTab === 'messages' ? 'var(--primary)' : 'transparent',
-              color: location.state?.activeTab === 'messages' ? 'white' : 'var(--gray-700)',
-              border: 'none',
-              borderRadius: '6px 6px 0 0',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontSize: 14,
-              transition: 'all 0.2s',
-            }}
-          >
-            Messages
-          </button>
+          <BadgeTab label="Messages" tabName="messages" route="/freelancer" />
           <button
             onClick={() => navigate('/freelancer', { state: { activeTab: 'my-profile' } })}
             style={{
@@ -271,4 +286,47 @@ export default function Navigation() {
       )}
     </div>
   )
+
+  function BadgeTab({ label, tabName, route }) {
+    const isActive = location.state?.activeTab === tabName
+    return (
+      <button
+        onClick={() => navigate(route, { state: { activeTab: tabName } })}
+        style={{
+          padding: '12px 20px',
+          backgroundColor: isActive ? 'var(--primary)' : 'transparent',
+          color: isActive ? 'white' : 'var(--gray-700)',
+          border: 'none',
+          borderRadius: '6px 6px 0 0',
+          fontWeight: 600,
+          cursor: 'pointer',
+          fontSize: 14,
+          transition: 'all 0.2s',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}
+      >
+        {label}
+        {messageBadge > 0 && (
+          <span style={{
+            backgroundColor: 'var(--danger)',
+            color: 'white',
+            borderRadius: '50%',
+            fontSize: 11,
+            fontWeight: 700,
+            minWidth: 18,
+            height: 18,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 4px',
+          }}>
+            {messageBadge}
+          </span>
+        )}
+      </button>
+    )
+  }
 }
