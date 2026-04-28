@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { jobService } from '../services/jobService'
 import { conversationService } from '../services/conversationService'
 import { freelancerService } from '../services/freelancerService'
+import { customerService } from '../services/customerService'
 
 export default function JobCard({ job, currentUserId, onApply, userCategories = [], applicationStatus = null }) {
   const [showApplyForm, setShowApplyForm] = useState(false)
