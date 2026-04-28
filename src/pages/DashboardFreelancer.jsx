@@ -192,6 +192,9 @@ export default function DashboardFreelancer() {
     setPhotoUploading(false)
   }
 
+  const jobsFinished = conversations.filter((conv) => conv.status === 'closed').length
+  const reviewCount = profile.totalReviews ?? reviews.length
+
   return (
     <div style={{ padding: '40px 20px', backgroundColor: 'var(--gray-50)', minHeight: 'calc(100vh - 120px)' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -587,7 +590,7 @@ export default function DashboardFreelancer() {
                 boxShadow: 'var(--shadow-sm)',
                 maxWidth: 800,
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
                   <h2 style={{ margin: 0 }}>Your Profile</h2>
                   <button onClick={() => setIsEditingProfile(true)} style={{
                     padding: '10px 20px',
@@ -601,6 +604,38 @@ export default function DashboardFreelancer() {
                   }}>
                     Edit Profile
                   </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
+                  <div style={{ padding: 20, backgroundColor: 'var(--gray-50)', borderRadius: 12, border: '1px solid var(--gray-200)' }}>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Average rating</p>
+                    <p style={{ margin: '10px 0 0', fontSize: 28, fontWeight: 700, color: 'var(--gray-900)' }}>
+                      {profile.averageRating ? profile.averageRating.toFixed(1) : '—'}
+                    </p>
+                    <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--gray-500)' }}>
+                      {profile.averageRating ? `${reviewCount} review${reviewCount !== 1 ? 's' : ''}` : 'No rating yet'}
+                    </p>
+                  </div>
+
+                  <div style={{ padding: 20, backgroundColor: 'var(--gray-50)', borderRadius: 12, border: '1px solid var(--gray-200)' }}>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Jobs completed</p>
+                    <p style={{ margin: '10px 0 0', fontSize: 28, fontWeight: 700, color: 'var(--gray-900)' }}>
+                      {jobsFinished}
+                    </p>
+                    <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--gray-500)' }}>
+                      Closed conversations / finished jobs
+                    </p>
+                  </div>
+
+                  <div style={{ padding: 20, backgroundColor: 'var(--gray-50)', borderRadius: 12, border: '1px solid var(--gray-200)' }}>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total reviews</p>
+                    <p style={{ margin: '10px 0 0', fontSize: 28, fontWeight: 700, color: 'var(--gray-900)' }}>
+                      {reviewCount}
+                    </p>
+                    <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--gray-500)' }}>
+                      Feedback from customers
+                    </p>
+                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gap: 24 }}>
