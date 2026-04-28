@@ -964,9 +964,21 @@ async function handleAccept(conversationId) {
                   alignItems: 'center',
                 }}>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>
-                      {selectedConversation.freelancerName || 'Freelancer'}
-                    </h4>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{
+                        width: 44, height: 44, borderRadius: '50%',
+                        overflow: 'hidden', backgroundColor: 'var(--gray-200)',
+                        flexShrink: 0, display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: 20,
+                      }}>
+                        {selectedConversation.freelancerPhoto
+                          ? <img src={selectedConversation.freelancerPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : '👤'}
+                      </div>
+                      <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>
+                        {selectedConversation.freelancerName || 'Freelancer'}
+                      </h4>
+                    </div>
                     <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>
                       {selectedConversation.jobTitle} • {selectedConversation.status === 'pending' ? 'Reviewing application' :
                       selectedConversation.status === 'accepted' ? '✓ Assigned' :
@@ -1033,7 +1045,7 @@ async function handleAccept(conversationId) {
                         )}
                       </>
                     )}
-                    {(selectedConversation.status === 'pending' || selectedConversation.status === 'accepted') && (
+                    {selectedConversation.status === 'pending' && (
                       <button onClick={() => handleDecline(selectedConversation.id)} style={{
                         padding: '8px 18px',
                         backgroundColor: 'var(--danger)',
