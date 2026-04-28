@@ -15,7 +15,7 @@ import { db } from '../firebaseConfig'
 
 export const conversationService = {
 
-async createConversation(jobId, jobTitle, freelancerId, freelancerName, customerId, firstMessage) {
+async createConversation(jobId, jobTitle, freelancerId, freelancerName, freelancerPhoto, customerId, customerName, customerPhoto, firstMessage) {
     // Check if conversation already exists for this job + freelancer
     const q = query(
       collection(db, 'conversations'),
