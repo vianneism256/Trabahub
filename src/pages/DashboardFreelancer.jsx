@@ -266,7 +266,7 @@ export default function DashboardFreelancer() {
                     job={job}
                     currentUserId={currentUser.uid}
                     userCategories={profile.categories}
-                    onApply={loadJobs}
+                    onApply={() => {}}
                   />
                 ))}
               </div>
@@ -315,7 +315,7 @@ export default function DashboardFreelancer() {
                         job={job}
                         currentUserId={currentUser.uid}
                         userCategories={profile.categories}
-                        onApply={loadJobs}
+                        onApply={() => {}}
                         applicationStatus={conv?.status || 'pending'}
                       />
                     )
@@ -587,6 +587,58 @@ export default function DashboardFreelancer() {
                 </div>
 
                 <div style={{ display: 'grid', gap: 24 }}>
+
+                  {/* Profile Photo */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                    <div style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      backgroundColor: 'var(--gray-200)',
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 32,
+                    }}>
+                      {profile.photoURL ? (
+                        <img
+                          src={profile.photoURL}
+                          alt="Profile"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        '👤'
+                      )}
+                    </div>
+                    <div>
+                      <p style={{ fontWeight: 600, marginBottom: 8, fontSize: 14 }}>Profile Photo</p>
+                      <label style={{
+                        padding: '8px 16px',
+                        backgroundColor: 'var(--primary)',
+                        color: 'white',
+                        borderRadius: 6,
+                        cursor: 'pointer',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        display: 'inline-block',
+                      }}>
+                        {photoUploading ? 'Uploading...' : profile.photoURL ? 'Change Photo' : 'Upload Photo'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          disabled={photoUploading}
+                          style={{ display: 'none' }}
+                        />
+                      </label>
+                      <p style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 6 }}>
+                        Max 5MB. JPG, PNG, or GIF.
+                      </p>
+                    </div>
+                  </div>
+
                   <div>
                     <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
                       Name
