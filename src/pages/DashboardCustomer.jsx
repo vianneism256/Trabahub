@@ -29,7 +29,9 @@ export default function DashboardCustomer() {
   const [newMessage, setNewMessage] = useState('')
   const [sendingMessage, setSendingMessage] = useState(false)
   const messagesEndRef = useRef(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
+  
   useEffect(() => {
     if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab)
@@ -476,25 +478,61 @@ export default function DashboardCustomer() {
               borderRadius: 8,
               boxShadow: 'var(--shadow-sm)',
               marginBottom: 32,
+              display: 'flex',
+              gap: 16,
+              flexWrap: 'wrap',
+              alignItems: 'end',
             }}>
-              <label style={{ fontWeight: 600, marginBottom: 12, display: 'block' }}>Select a Category</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                style={{
+              <div>
+                <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Select a Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  style={{
+                    padding: '12px 16px',
+                    fontSize: 16,
+                    borderRadius: 6,
+                    border: '1px solid var(--gray-300)',
+                    minWidth: 200,
+                  }}
+                >
+                  <option value="">-- Choose a category --</option>
+                  <option value="all">All Categories</option>
+                  {freelancerService.CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Search by Name</label>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="e.g. Juan dela Cruz..."
+                  style={{
+                    padding: '12px 16px',
+                    fontSize: 16,
+                    borderRadius: 6,
+                    border: '1px solid var(--gray-300)',
+                    width: '100%',
+                  }}
+                />
+              </div>
+              {(searchQuery || selectedCategory) && (
+                <button onClick={() => { setSearchQuery(''); setSelectedCategory('') }} style={{
                   padding: '12px 16px',
-                  fontSize: 16,
+                  backgroundColor: 'var(--gray-200)',
+                  color: 'var(--gray-700)',
+                  border: 'none',
                   borderRadius: 6,
-                  border: '1px solid var(--gray-300)',
-                  maxWidth: 400,
-                }}
-              >
-                <option value="">-- Choose a category --</option>
-                <option value="all">All Categories</option>
-                {freelancerService.CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontSize: 14,
+                }}>
+                  Clear Filters
+                </button>
+              )}
             </div>
 
             {loading && <div style={{ textAlign: 'center', padding: 40, color: 'var(--gray-600)' }}>Loading professionals...</div>}
@@ -517,7 +555,12 @@ export default function DashboardCustomer() {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
                 gap: 20,
               }}>
-                {freelancers.map((freelancer) => (
+                {freelancers
+                  .filter((f) => 
+                    f.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    f.bio?.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .map((freelancer) => (
                   <div key={freelancer.uid} style={{
                     backgroundColor: 'white',
                     borderRadius: 8,
