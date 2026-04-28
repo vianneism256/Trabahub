@@ -33,6 +33,21 @@ async function handleApply() {
   setLoading(false)
 }
 
+async function handleWithdraw() {
+    if (!window.confirm('Are you sure you want to withdraw this application?')) return
+    setLoading(true)
+    try {
+      await jobService.withdrawApplication(job.id, currentUserId)
+      await conversationService.deleteConversation(job.id, currentUserId)
+      setApplied(false)
+      onApply?.()
+    } catch (err) {
+      alert(`Error: ${err.message}`)
+    }
+    setLoading(false)
+  }
+
+
   const isRelevant = job.categories.some((c) => userCategories.includes(c))
   const borderColor = isRelevant ? 'var(--primary)' : 'var(--gray-200)'
 
@@ -245,28 +260,45 @@ async function handleApply() {
             )}
           </>
         ) : (
-          <div style={{
-            padding: '12px 16px',
-            borderRadius: 6,
-            textAlign: 'center',
-            fontWeight: 700,
-            fontSize: 14,
-            backgroundColor:
-              applicationStatus === 'accepted' ? 'var(--success-light)' :
-              applicationStatus === 'declined' ? 'var(--danger-light)' :
-              applicationStatus === 'closed' ? 'var(--gray-100)' :
-              'var(--success-light)',
-            color:
-              applicationStatus === 'accepted' ? 'var(--success)' :
-              applicationStatus === 'declined' ? 'var(--danger)' :
-              applicationStatus === 'closed' ? 'var(--gray-500)' :
-              'var(--success)',
-          }}>
-            {applicationStatus === 'accepted' && '✓ Application Accepted!'}
-            {applicationStatus === 'declined' && '✗ Application Declined'}
-            {applicationStatus === 'closed' && 'Job Closed'}
-            {applicationStatus === 'pending' && '⏳ Application Pending'}
-            {!applicationStatus && '✓ Application Sent'}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{
+              padding: '12px 16px',
+              borderRadius: 6,
+              textAlign: 'center',
+              fontWeight: 700,
+              fontSize: 14,
+              backgroundColor:
+                applicationStatus === 'accepted' ? 'var(--success-light)' :
+                applicationStatus === 'declined' ? 'var(--danger-light)' :
+                applicationStatus === 'closed' ? 'var(--gray-100)' :
+                'var(--success-light)',
+              color:
+                applicationStatus === 'accepted' ? 'var(--success)' :
+                applicationStatus === 'declined' ? 'var(--danger)' :
+                applicationStatus === 'closed' ? 'var(--gray-500)' :
+                'var(--success)',
+            }}>
+              {applicationStatus === 'accepted' && '✓ Application Accepted!'}
+              {applicationStatus === 'declined' && '✗ Application Declined'}
+              {applicationStatus === 'closed' && 'Job Closed'}
+              {applicationStatus === 'pending' && '⏳ Application Pending'}
+              {!applicationStatus && '✓ Application Sent'}
+            </div>
+            {applicationStatus === 'pending' && (
+              <button onClick={handleWithdraw} disabled={loading} style={{
+                width: '100%',
+                padding: '10px 16px',
+                backgroundColor: 'var(--danger)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 6,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: 13,
+              }}>
+                {loading ? 'Withdrawing...' : 'Withdraw Application'}
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -9,6 +9,7 @@ import {
   onSnapshot,
   orderBy,
   serverTimestamp,
+  deleteDoc,
 } from 'firebase/firestore'
 import { db } from '../firebaseConfig'
 
@@ -133,5 +134,16 @@ export const conversationService = {
         .sort((a, b) => b.lastMessageAt - a.lastMessageAt)
       callback(data)
     })
+  },
+
+  async deleteConversation(jobId, freelancerId) {
+    const q = query(
+      collection(db, 'conversations'),
+      where('jobId', '==', jobId),
+      where('freelancerId', '==', freelancerId)
+    )
+    const snap = await getDocs(q)
+    const deletes = snap.docs.map((d) => deleteDoc(doc(db, 'conversations', d.id)))
+    await Promise.all(deletes)
   },
 }

@@ -91,4 +91,15 @@ export const jobService = {
     const ref = doc(db, 'jobs', jobId)
     await updateDoc(ref, { status: 'open', updatedAt: Date.now() })
   },
+
+
+  async withdrawApplication(jobId, freelancerId) {
+    const ref = doc(db, 'jobs', jobId)
+    const snap = await getDoc(ref)
+    if (snap.exists()) {
+      const applications = snap.data().applications || []
+      const updated = applications.filter((a) => a.freelancerId !== freelancerId)
+      await updateDoc(ref, { applications: updated, updatedAt: Date.now() })
+    }
+  },
 }
