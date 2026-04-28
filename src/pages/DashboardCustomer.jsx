@@ -751,21 +751,7 @@ async function handleAccept(conversationId) {
                         flexDirection: 'column',
                         gap: 8,
                       }}>
-                        <a href={`mailto:${freelancer.email}`} style={{
-                          display: 'block',
-                          padding: '10px 12px',
-                          backgroundColor: 'var(--primary)',
-                          color: 'white',
-                          textDecoration: 'none',
-                          borderRadius: 6,
-                          textAlign: 'center',
-                          fontWeight: 600,
-                          fontSize: 14,
-                          transition: 'background-color 0.2s',
-                        }} onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--primary-dark)'} onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--primary)'}>
-                          Email
-                        </a>
-                        <button onClick={() => setViewingFreelancer(freelancer)} style={{
+                          <button onClick={() => setViewingFreelancer(freelancer)} style={{
                           display: 'block',
                           padding: '10px 12px',
                           backgroundColor: 'var(--secondary, #6b7280)',
@@ -780,6 +766,20 @@ async function handleAccept(conversationId) {
                         }} onMouseEnter={(e) => e.target.style.backgroundColor = '#5a6575'} onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--secondary, #6b7280)'}>
                           View Profile
                         </button>
+                        <a href={`mailto:${freelancer.email}`} style={{
+                          display: 'block',
+                          padding: '10px 12px',
+                          backgroundColor: 'var(--primary)',
+                          color: 'white',
+                          textDecoration: 'none',
+                          borderRadius: 6,
+                          textAlign: 'center',
+                          fontWeight: 600,
+                          fontSize: 14,
+                          transition: 'background-color 0.2s',
+                        }} onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--primary-dark)'} onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--primary)'}>
+                          Email
+                        </a>
                         {freelancer.phone && (
                           <a href={`tel:${freelancer.phone}`} style={{
                             display: 'block',
