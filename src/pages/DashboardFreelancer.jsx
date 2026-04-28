@@ -393,7 +393,7 @@ export default function DashboardFreelancer() {
                       </p>
                     </div>
                       <span style={{
-                        fontSize: 11,
+                        fontSize: 14,
                         fontWeight: 600,
                         padding: '2px 8px',
                         borderRadius: 20,
