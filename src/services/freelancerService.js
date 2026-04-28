@@ -1,8 +1,7 @@
 import { doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore'
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { storage } from '../firebaseConfig'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db } from '../firebaseConfig'
-
-const storage = getStorage()
 
 const CATEGORIES = ['Plumbing', 'Electrician', 'Carpenter', 'Cleaning', 'Painting', 'HVAC', 'Roofing', 'Landscaping']
 
