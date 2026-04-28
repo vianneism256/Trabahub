@@ -1,5 +1,8 @@
 import { doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore'
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db } from '../firebaseConfig'
+
+const storage = getStorage()
 
 const CATEGORIES = ['Plumbing', 'Electrician', 'Carpenter', 'Cleaning', 'Painting', 'HVAC', 'Roofing', 'Landscaping']
 
@@ -39,5 +42,13 @@ export const freelancerService = {
   async setVerified(uid, verified) {
     const ref = doc(db, 'freelancers', uid)
     await updateDoc(ref, { verified })
+  },
+
+  async uploadProfilePhoto(uid, file) {
+    const storageRef = ref(storage, `profile-photos/${uid}`)
+    await uploadBytes(storageRef, file)
+    const url = await getDownloadURL(storageRef)
+    await updateDoc(doc(db, 'freelancers', uid), { photoURL: url })
+    return url
   },
 }

@@ -33,6 +33,7 @@ export default function DashboardFreelancer() {
   const [sendingMessage, setSendingMessage] = useState(false)
   const messagesEndRef = useRef(null)
   const [reviews, setReviews] = useState([])
+  const [photoUploading, setPhotoUploading] = useState(false)
 
 
   useEffect(() => {
@@ -167,6 +168,28 @@ export default function DashboardFreelancer() {
       setMessage(`Error: ${err.message}`)
     }
     setLoading(false)
+  }
+
+
+  async function handlePhotoUpload(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be under 5MB')
+      return
+    }
+    setPhotoUploading(true)
+    try {
+      const url = await freelancerService.uploadProfilePhoto(currentUser.uid, file)
+      setProfile((prev) => ({ ...prev, photoURL: url }))
+    } catch (err) {
+      alert(`Error: ${err.message}`)
+    }
+    setPhotoUploading(false)
   }
 
   return (
@@ -622,6 +645,49 @@ export default function DashboardFreelancer() {
                         <p style={{ color: 'var(--gray-600)' }}>No specialties selected yet</p>
                       )}
                     </div>
+                  </div>
+
+                  {/* Reviews section */}
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 12px 0', textTransform: 'uppercase' }}>
+                      Reviews {reviews.length > 0 && `(${reviews.length})`}
+                    </p>
+                    {profile.averageRating && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                        <StarRating value={profile.averageRating} size={20} />
+                        <span style={{ fontWeight: 700, fontSize: 18 }}>{profile.averageRating}</span>
+                        <span style={{ color: 'var(--gray-500)', fontSize: 13 }}>({profile.totalReviews} review{profile.totalReviews !== 1 ? 's' : ''})</span>
+                      </div>
+                    )}
+                    {reviews.length === 0 ? (
+                      <p style={{ color: 'var(--gray-500)', fontSize: 14 }}>No reviews yet</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {reviews.map((review) => (
+                          <div key={review.id} style={{
+                            padding: 16,
+                            backgroundColor: 'var(--gray-50)',
+                            borderRadius: 8,
+                            border: '1px solid var(--gray-200)',
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                              <StarRating value={review.rating} size={16} />
+                              <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>
+                                {new Date(review.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <p style={{ fontSize: 13, color: 'var(--gray-700)', margin: '4px 0 0 0', fontStyle: 'italic' }}>
+                              {review.jobTitle}
+                            </p>
+                            {review.comment && (
+                              <p style={{ fontSize: 14, color: 'var(--gray-800)', margin: '8px 0 0 0' }}>
+                                "{review.comment}"
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
