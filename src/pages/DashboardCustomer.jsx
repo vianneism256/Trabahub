@@ -34,6 +34,7 @@ export default function DashboardCustomer() {
   const [sendingMessage, setSendingMessage] = useState(false)
   const messagesEndRef = useRef(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [viewingFreelancer, setViewingFreelancer] = useState(null)
   const [reviewForm, setReviewForm] = useState({ rating: 0, comment: '' })
   const [reviewingConvId, setReviewingConvId] = useState(null)
   const [reviewSubmitted, setReviewSubmitted] = useState([])
@@ -764,6 +765,21 @@ async function handleAccept(conversationId) {
                         }} onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--primary-dark)'} onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--primary)'}>
                           Email
                         </a>
+                        <button onClick={() => setViewingFreelancer(freelancer)} style={{
+                          display: 'block',
+                          padding: '10px 12px',
+                          backgroundColor: 'var(--secondary, #6b7280)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 6,
+                          textAlign: 'center',
+                          fontWeight: 600,
+                          fontSize: 14,
+                          cursor: 'pointer',
+                          transition: 'background-color 0.2s',
+                        }} onMouseEnter={(e) => e.target.style.backgroundColor = '#5a6575'} onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--secondary, #6b7280)'}>
+                          View Profile
+                        </button>
                         {freelancer.phone && (
                           <a href={`tel:${freelancer.phone}`} style={{
                             display: 'block',
@@ -786,6 +802,100 @@ async function handleAccept(conversationId) {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {viewingFreelancer && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.45)',
+            zIndex: 999,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+          }}>
+            <div style={{
+              width: '100%',
+              maxWidth: 700,
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              backgroundColor: 'white',
+              borderRadius: 16,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+              padding: 24,
+              position: 'relative',
+            }}>
+              <button onClick={() => setViewingFreelancer(null)} style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--gray-700)',
+                fontSize: 18,
+                cursor: 'pointer',
+              }}>
+                ✕
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
+                <div style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  backgroundColor: 'var(--gray-200)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 32,
+                }}>
+                  {viewingFreelancer.photoURL ? (
+                    <img src={viewingFreelancer.photoURL} alt={viewingFreelancer.displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : '👤'}
+                </div>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: 24 }}>{viewingFreelancer.displayName || 'Freelancer'}</h2>
+                  <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--gray-600)' }}>{viewingFreelancer.categories?.join(', ') || 'No specialties listed'}</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
+                <div style={{ padding: 18, borderRadius: 12, backgroundColor: 'var(--gray-50)', border: '1px solid var(--gray-200)' }}>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rating</p>
+                  <p style={{ margin: '10px 0 0', fontSize: 22, fontWeight: 700 }}>{viewingFreelancer.averageRating ? viewingFreelancer.averageRating.toFixed(1) : '—'}</p>
+                </div>
+                <div style={{ padding: 18, borderRadius: 12, backgroundColor: 'var(--gray-50)', border: '1px solid var(--gray-200)' }}>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Reviews</p>
+                  <p style={{ margin: '10px 0 0', fontSize: 22, fontWeight: 700 }}>{viewingFreelancer.totalReviews ?? 0}</p>
+                </div>
+                <div style={{ padding: 18, borderRadius: 12, backgroundColor: 'var(--gray-50)', border: '1px solid var(--gray-200)' }}>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Jobs finished</p>
+                  <p style={{ margin: '10px 0 0', fontSize: 22, fontWeight: 700 }}>{viewingFreelancer.completedJobs ?? 'N/A'}</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gap: 16 }}>
+                {viewingFreelancer.bio && (
+                  <div>
+                    <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>About</p>
+                    <p style={{ margin: '10px 0 0', color: 'var(--gray-700)', lineHeight: 1.7 }}>{viewingFreelancer.bio}</p>
+                  </div>
+                )}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email</p>
+                    <p style={{ margin: '10px 0 0', fontWeight: 600, color: 'var(--gray-900)' }}>{viewingFreelancer.email || '—'}</p>
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone</p>
+                    <p style={{ margin: '10px 0 0', fontWeight: 600, color: 'var(--gray-900)' }}>{viewingFreelancer.phone || '—'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
