@@ -8,12 +8,20 @@ export default function Navigation() {
   const { currentUser, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [userRole, setUserRole] = useState(location.state?.role || null)
+  const [userRole, setUserRole] = useState(null)
   const [messageBadge, setMessageBadge] = useState(0)
+
+  useEffect(() => {
+    if (location.state?.role) {
+      setUserRole(location.state.role)
+    }
+  }, [location.state?.role])
 
   useEffect(() => {
     if (currentUser) {
       loadUserRole()
+    } else {
+      setUserRole(null)
     }
   }, [currentUser])
 
