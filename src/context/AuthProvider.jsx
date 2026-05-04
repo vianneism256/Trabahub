@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { auth } from '../firebaseConfig.js'
-import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'
+import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
 import { supabase } from '../supabase.js'
 
 const AuthContext = createContext()
@@ -33,6 +33,10 @@ export function AuthProvider({ children }) {
     return signOut(auth)
   }
 
+  function resetPassword(email) {
+    return sendPasswordResetEmail(auth, email)
+  }
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user)
@@ -47,6 +51,7 @@ export function AuthProvider({ children }) {
     login,
     signInWithGoogle,
     logout,
+    resetPassword,
   }
 
   return (
