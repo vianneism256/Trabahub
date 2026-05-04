@@ -1296,16 +1296,9 @@ async function handleAccept(conversationId) {
         )}
 
       </div>
-    </div> 
+    </div>
   )
 }
-
-        
-
-      </div>
-
-      {/* My Profile Tab */}
-        {activeTab === 'my-profile' && (
           <div>
             {!isEditingProfile ? (
               <div style={{
