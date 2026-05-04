@@ -65,7 +65,7 @@ export const reviewService = {
     fetchReviews()
 
     const channel = supabase
-      .channel(`reviews-${freelancerId}`)
+      .channel(`reviews-${freelancerId}-${Date.now()}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'reviews', filter: `freelancer_id=eq.${freelancerId}` },

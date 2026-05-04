@@ -130,7 +130,7 @@ export const conversationService = {
     fetchMessages()
 
     const channel = supabase
-      .channel(`messages-${conversationId}`)
+      .channel(`messages-${conversationId}-${Date.now()}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
@@ -179,7 +179,7 @@ export const conversationService = {
     fetchConversations()
 
     const channel = supabase
-      .channel(`conversations-freelancer-${freelancerId}`)
+      .channel(`conversations-freelancer-${freelancerId}-${Date.now()}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'conversations', filter: `freelancer_id=eq.${freelancerId}` },
@@ -212,7 +212,7 @@ export const conversationService = {
     fetchConversations()
 
     const channel = supabase
-      .channel(`conversations-customer-${customerId}`)
+      .channel(`conversations-customer-${customerId}-${Date.now()}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'conversations', filter: `customer_id=eq.${customerId}` },

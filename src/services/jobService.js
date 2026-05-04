@@ -140,7 +140,7 @@ export const jobService = {
     fetchOpenJobs()
 
     const channel = supabase
-      .channel('jobs-open')
+      .channel(`jobs-open-${Date.now()}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'jobs', filter: 'status=eq.open' },
@@ -162,7 +162,7 @@ export const jobService = {
     fetchCustomerJobs()
 
     const channel = supabase
-      .channel(`jobs-customer-${uid}`)
+      .channel(`jobs-customer-${uid}-${Date.now()}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'jobs', filter: `customer_id=eq.${uid}` },
