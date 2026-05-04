@@ -43,6 +43,9 @@ useEffect(() => {
     })
 
     return () => {
+      unsubEditLogs()
+    }
+  }, [])
 
   async function toggleVerified(uid, currentStatus) {
     try {
