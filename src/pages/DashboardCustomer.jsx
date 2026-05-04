@@ -1295,8 +1295,8 @@ async function handleAccept(conversationId) {
           </div>
         )}
 
-      </div> {/* closes maxWidth 1200 */}
-    </div> {/* closes outer padding */}
+      </div>
+    </div> 
   )
 }
 
