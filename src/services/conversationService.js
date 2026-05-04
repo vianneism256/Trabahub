@@ -11,7 +11,8 @@ import {
   serverTimestamp,
   deleteDoc,
 } from 'firebase/firestore'
-import { db } from '../firebaseConfig'
+import { storage, db } from '../firebaseConfig'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 export const conversationService = {
 
@@ -149,5 +150,47 @@ async createConversation(jobId, jobTitle, freelancerId, freelancerName, freelanc
     const snap = await getDocs(q)
     const deletes = snap.docs.map((d) => deleteDoc(doc(db, 'conversations', d.id)))
     await Promise.all(deletes)
+  },
+
+  // Upload file for a message (images and PDFs only)
+  async uploadMessageFile(conversationId, senderId, file) {
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'application/pdf']
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('Only PNG, JPG, GIF images and PDFs are allowed')
+    }
+
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      throw new Error('File must be under 10MB')
+    }
+
+    const timestamp = Date.now()
+    const filename = `${timestamp}-${file.name}`
+    const storageRef = ref(storage, `messages/${conversationId}/${filename}`)
+    await uploadBytes(storageRef, file)
+    const url = await getDownloadURL(storageRef)
+
+    return {
+      name: file.name,
+      type: file.type,
+      url: url,
+      size: file.size,
+    }
+  },
+
+  // Send a message with file attachment
+  async sendMessageWithFile(conversationId, senderId, text, fileData) {
+    await addDoc(collection(db, 'conversations', conversationId, 'messages'), {
+      senderId,
+      text: text || '',
+      file: fileData,
+      createdAt: serverTimestamp(),
+    })
+    // Update last message preview on the conversation
+    const preview = fileData.name ? `📎 ${fileData.name}` : (text || '[File]')
+    await updateDoc(doc(db, 'conversations', conversationId), {
+      lastMessage: preview,
+      lastMessageAt: Date.now(),
+    })
   },
 }

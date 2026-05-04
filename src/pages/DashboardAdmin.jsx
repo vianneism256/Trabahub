@@ -3,6 +3,7 @@ import { collection, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebaseConfig'
 import { freelancerService } from '../services/freelancerService'
 import { jobService } from '../services/jobService'
+import { certificationService } from '../services/certificationService'
 
 export default function DashboardAdmin() {
   const [freelancers, setFreelancers] = useState([])
@@ -10,6 +11,9 @@ export default function DashboardAdmin() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('freelancers')
   const [jobs, setJobs] = useState([])
+  const [editLogs, setEditLogs] = useState([])
+  const [selectedLogId, setSelectedLogId] = useState(null)
+  const [rejectionReason, setRejectionReason] = useState('')
 
 useEffect(() => {
     setLoading(true)
@@ -27,10 +31,15 @@ useEffect(() => {
       setJobs(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
     })
 
+    const unsubEditLogs = certificationService.listenToPendingEditLogs((logs) => {
+      setEditLogs(logs)
+    })
+
     return () => {
       unsubFreelancers()
       unsubUsers()
       unsubJobs()
+      unsubEditLogs()
     }
   }, [])
 
@@ -42,6 +51,35 @@ useEffect(() => {
       )
     } catch (err) {
       console.error(err)
+    }
+  }
+
+  async function handleVerifyCertification(logId, certId) {
+    try {
+      await certificationService.verifyCertification(certId, 'admin')
+      await certificationService.markEditLogReviewed(logId)
+      setEditLogs((prev) => prev.filter((log) => log.id !== logId))
+      setSelectedLogId(null)
+      alert('✓ Certification verified successfully!')
+    } catch (err) {
+      alert(`Error: ${err.message}`)
+    }
+  }
+
+  async function handleRejectCertification(logId, certId) {
+    if (!rejectionReason.trim()) {
+      alert('Please provide a rejection reason')
+      return
+    }
+    try {
+      await certificationService.rejectCertification(certId, 'admin', rejectionReason)
+      await certificationService.markEditLogReviewed(logId)
+      setEditLogs((prev) => prev.filter((log) => log.id !== logId))
+      setSelectedLogId(null)
+      setRejectionReason('')
+      alert('❌ Certification rejected')
+    } catch (err) {
+      alert(`Error: ${err.message}`)
     }
   }
 
@@ -187,6 +225,42 @@ useEffect(() => {
           >
             All Users {`(${users.length})`}
           </button>
+          <button
+            onClick={() => setActiveTab('edit-logs')}
+            style={{
+              padding: '12px 20px',
+              backgroundColor: activeTab === 'edit-logs' ? 'var(--primary)' : 'transparent',
+              color: activeTab === 'edit-logs' ? 'white' : 'var(--gray-700)',
+              border: 'none',
+              borderRadius: '6px 6px 0 0',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: 14,
+              transition: 'all 0.2s',
+              position: 'relative',
+            }}
+          >
+            Verify Certifications
+            {editLogs.length > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: -8,
+                right: 8,
+                backgroundColor: 'var(--danger)',
+                color: 'white',
+                borderRadius: '50%',
+                width: 20,
+                height: 20,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 12,
+                fontWeight: 700,
+              }}>
+                {editLogs.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {loading && <div style={{ textAlign: 'center', padding: 40, color: 'var(--gray-600)' }}>Loading...</div>}
@@ -326,6 +400,194 @@ useEffect(() => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Edit Logs / Certification Verification Tab */}
+        {activeTab === 'edit-logs' && !loading && (
+          <div>
+            {editLogs.length === 0 ? (
+              <div style={{
+                backgroundColor: 'white',
+                padding: 40,
+                borderRadius: 8,
+                textAlign: 'center',
+                color: 'var(--gray-600)',
+              }}>
+                <p style={{ fontSize: 16, marginBottom: 8 }}>No pending certifications to review</p>
+                <p style={{ fontSize: 13, color: 'var(--gray-500)' }}>All freelancer submissions have been verified</p>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gap: 16 }}>
+                {editLogs.map((log) => (
+                  <div key={log.id} style={{
+                    backgroundColor: 'white',
+                    borderRadius: 8,
+                    boxShadow: 'var(--shadow-sm)',
+                    border: '2px solid var(--primary-light)',
+                    overflow: 'hidden',
+                  }}>
+                    <div style={{ padding: 24 }}>
+                      {/* Header with freelancer info */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid var(--gray-200)' }}>
+                        <div style={{
+                          width: 60,
+                          height: 60,
+                          borderRadius: '50%',
+                          backgroundColor: 'var(--gray-200)',
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 24,
+                          overflow: 'hidden',
+                        }}>
+                          {log.freelancerPhoto ? (
+                            <img src={log.freelancerPhoto} alt={log.freelancerName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            '👤'
+                          )}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px 0' }}>{log.freelancerName}</p>
+                          <p style={{ fontSize: 13, color: 'var(--gray-600)', margin: '0 0 4px 0' }}>{log.freelancerEmail}</p>
+                          <p style={{ fontSize: 12, color: 'var(--gray-500)', margin: 0 }}>
+                            Submitted {new Date(log.createdAt.toDate ? log.createdAt.toDate() : log.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Certification details */}
+                      {log.changeType === 'certification_added' && log.details && (
+                        <div style={{ marginBottom: 20 }}>
+                          <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: 'var(--gray-700)' }}>
+                            📜 {log.details.certificationTitle}
+                          </p>
+                          <div style={{
+                            borderRadius: 8,
+                            overflow: 'hidden',
+                            maxWidth: 300,
+                            marginBottom: 16,
+                          }}>
+                            <img
+                              src={log.details.certificationImage}
+                              alt={log.details.certificationTitle}
+                              style={{ width: '100%', maxHeight: 300, objectFit: 'cover' }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action buttons */}
+                      {selectedLogId !== log.id ? (
+                        <div style={{ display: 'flex', gap: 12 }}>
+                          <button
+                            onClick={() => setSelectedLogId(log.id)}
+                            style={{
+                              flex: 1,
+                              padding: '12px 16px',
+                              backgroundColor: 'var(--primary)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 6,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              fontSize: 14,
+                            }}
+                          >
+                            Review
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{
+                          padding: 16,
+                          backgroundColor: 'var(--gray-50)',
+                          borderRadius: 8,
+                          borderTop: '2px solid var(--primary)',
+                          marginTop: 12,
+                        }}>
+                          <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: 'var(--gray-700)' }}>
+                            What would you like to do?
+                          </p>
+                          <div style={{ display: 'grid', gap: 12 }}>
+                            <div>
+                              <textarea
+                                value={rejectionReason}
+                                onChange={(e) => setRejectionReason(e.target.value)}
+                                placeholder="If rejecting, explain why (optional for approval)..."
+                                style={{
+                                  width: '100%',
+                                  padding: '10px 12px',
+                                  border: '1px solid var(--gray-300)',
+                                  borderRadius: 6,
+                                  fontFamily: 'inherit',
+                                  fontSize: 13,
+                                  minHeight: 80,
+                                  boxSizing: 'border-box',
+                                }}
+                              />
+                            </div>
+                            <div style={{ display: 'flex', gap: 12 }}>
+                              <button
+                                onClick={() => handleVerifyCertification(log.id, log.details.certificationId)}
+                                style={{
+                                  flex: 1,
+                                  padding: '12px 16px',
+                                  backgroundColor: 'var(--success)',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: 6,
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  fontSize: 13,
+                                }}
+                              >
+                                ✓ Verify
+                              </button>
+                              <button
+                                onClick={() => handleRejectCertification(log.id, log.details.certificationId)}
+                                style={{
+                                  flex: 1,
+                                  padding: '12px 16px',
+                                  backgroundColor: 'var(--danger)',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: 6,
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  fontSize: 13,
+                                }}
+                              >
+                                ❌ Reject
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedLogId(null)
+                                  setRejectionReason('')
+                                }}
+                                style={{
+                                  flex: 1,
+                                  padding: '12px 16px',
+                                  backgroundColor: 'var(--gray-300)',
+                                  color: 'var(--gray-700)',
+                                  border: 'none',
+                                  borderRadius: 6,
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  fontSize: 13,
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

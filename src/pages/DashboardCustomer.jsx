@@ -50,6 +50,9 @@ const [isEditingProfile, setIsEditingProfile] = useState(false)
 const [profileMessage, setProfileMessage] = useState('')
 const [photoUploading, setPhotoUploading] = useState(false)
 const [profileLoading, setProfileLoading] = useState(false)
+const [selectedFile, setSelectedFile] = useState(null)
+const [uploadingFile, setUploadingFile] = useState(false)
+const fileInputRef = useRef(null)
 
   
   useEffect(() => {
@@ -234,19 +237,63 @@ async function handleAccept(conversationId) {
   }
 
   async function handleSendMessage() {
-    if (!newMessage.trim() || !selectedConversation) return
+    if (!selectedConversation) return
+    if (!newMessage.trim() && !selectedFile) return
+
     setSendingMessage(true)
     try {
-      await conversationService.sendMessage(
-        selectedConversation.id,
-        currentUser.uid,
-        newMessage
-      )
+      if (selectedFile) {
+        // Upload file and send message with file
+        const fileData = await conversationService.uploadMessageFile(
+          selectedConversation.id,
+          currentUser.uid,
+          selectedFile
+        )
+        await conversationService.sendMessageWithFile(
+          selectedConversation.id,
+          currentUser.uid,
+          newMessage.trim(),
+          fileData
+        )
+        setSelectedFile(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      } else {
+        // Just send text message
+        await conversationService.sendMessage(
+          selectedConversation.id,
+          currentUser.uid,
+          newMessage
+        )
+      }
       setNewMessage('')
     } catch (err) {
       alert(`Error: ${err.message}`)
     }
     setSendingMessage(false)
+  }
+
+  function handleFileSelect(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'application/pdf']
+    if (!allowedTypes.includes(file.type)) {
+      alert('Only PNG, JPG, GIF images and PDFs are allowed')
+      return
+    }
+
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      alert('File must be under 10MB')
+      return
+    }
+
+    setSelectedFile(file)
+  }
+
+  function handleFileRemove() {
+    setSelectedFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function handleProfileChange(e) {
@@ -1247,15 +1294,70 @@ async function handleAccept(conversationId) {
                       }}>
                         <div style={{
                           maxWidth: '65%',
-                          padding: '10px 14px',
-                          borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                          backgroundColor: isMe ? 'var(--primary)' : 'white',
-                          color: isMe ? 'white' : 'var(--gray-900)',
-                          fontSize: 14,
-                          lineHeight: 1.5,
-                          boxShadow: 'var(--shadow-sm)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 8,
                         }}>
-                          {msg.text}
+                          {msg.text && (
+                            <div style={{
+                              padding: '10px 14px',
+                              borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                              backgroundColor: isMe ? 'var(--primary)' : 'white',
+                              color: isMe ? 'white' : 'var(--gray-900)',
+                              fontSize: 14,
+                              lineHeight: 1.5,
+                              boxShadow: 'var(--shadow-sm)',
+                            }}>
+                              {msg.text}
+                            </div>
+                          )}
+                          {msg.file && (
+                            <div style={{
+                              padding: '10px 14px',
+                              borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                              backgroundColor: isMe ? 'var(--primary)' : 'white',
+                              boxShadow: 'var(--shadow-sm)',
+                            }}>
+                              {msg.file.type.startsWith('image/') ? (
+                                <a href={msg.file.url} target="_blank" rel="noopener noreferrer" style={{
+                                  display: 'inline-block',
+                                  maxWidth: '100%',
+                                  borderRadius: 8,
+                                  overflow: 'hidden',
+                                }}>
+                                  <img 
+                                    src={msg.file.url} 
+                                    alt={msg.file.name}
+                                    style={{
+                                      maxWidth: '300px',
+                                      maxHeight: '300px',
+                                      borderRadius: 8,
+                                    }}
+                                  />
+                                </a>
+                              ) : (
+                                <a 
+                                  href={msg.file.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    padding: '8px 12px',
+                                    backgroundColor: isMe ? 'rgba(255,255,255,0.2)' : 'var(--gray-100)',
+                                    borderRadius: 6,
+                                    textDecoration: 'none',
+                                    color: isMe ? 'white' : 'var(--primary)',
+                                    fontWeight: 600,
+                                    fontSize: 13,
+                                  }}
+                                >
+                                  📄 {msg.file.name}
+                                </a>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )
@@ -1268,55 +1370,114 @@ async function handleAccept(conversationId) {
                   padding: '16px 20px',
                   borderTop: '1px solid var(--gray-200)',
                   display: 'flex',
+                  flexDirection: 'column',
                   gap: 10,
                   backgroundColor: 'white',
                 }}>
-                  {selectedConversation.status === 'closed' || selectedConversation.status === 'declined' ? (
+                  {selectedFile && (
                     <div style={{
-                      flex: 1,
-                      textAlign: 'center',
-                      color: 'var(--gray-400)',
-                      fontSize: 13,
-                      padding: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '10px 12px',
+                      backgroundColor: 'var(--primary-light)',
+                      borderRadius: 8,
+                      border: '1px solid var(--primary)',
                     }}>
-                      {selectedConversation.status === 'declined' && 'This application was declined.'}
-                      {selectedConversation.status === 'closed' && 'This job is closed.'}
-                    </div>
-                  ) : (
-                    <>
-                      <input
-                        type="text"
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                        placeholder="Type a message..."
+                      <div style={{ flex: 1, fontSize: 13, color: 'var(--primary)', fontWeight: 600 }}>
+                        📎 {selectedFile.name}
+                      </div>
+                      <button 
+                        onClick={handleFileRemove}
                         style={{
-                          flex: 1,
-                          padding: '10px 14px',
-                          borderRadius: 20,
-                          border: '1px solid var(--gray-300)',
-                          fontSize: 14,
-                          outline: 'none',
-                        }}
-                      />
-                      <button
-                        onClick={handleSendMessage}
-                        disabled={sendingMessage}
-                        style={{
-                          padding: '10px 20px',
-                          backgroundColor: 'var(--primary)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: 20,
-                          fontWeight: 600,
+                          padding: '4px 12px',
+                          backgroundColor: 'transparent',
+                          color: 'var(--primary)',
+                          border: '1px solid var(--primary)',
+                          borderRadius: 4,
                           cursor: 'pointer',
-                          fontSize: 14,
+                          fontSize: 12,
+                          fontWeight: 600,
                         }}
                       >
-                        {sendingMessage ? '...' : 'Send'}
+                        Remove
                       </button>
-                    </>
+                    </div>
                   )}
+                  <div style={{
+                    display: 'flex',
+                    gap: 10,
+                  }}>
+                    {selectedConversation.status === 'closed' || selectedConversation.status === 'declined' ? (
+                      <div style={{
+                        flex: 1,
+                        textAlign: 'center',
+                        color: 'var(--gray-400)',
+                        fontSize: 13,
+                        padding: '10px',
+                      }}>
+                        {selectedConversation.status === 'declined' && 'This application was declined.'}
+                        {selectedConversation.status === 'closed' && 'This job is closed.'}
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                          placeholder="Type a message..."
+                          style={{
+                            flex: 1,
+                            padding: '10px 14px',
+                            borderRadius: 20,
+                            border: '1px solid var(--gray-300)',
+                            fontSize: 14,
+                            outline: 'none',
+                          }}
+                        />
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          onChange={handleFileSelect}
+                          accept=".png,.jpg,.jpeg,.gif,.pdf"
+                          style={{ display: 'none' }}
+                        />
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          style={{
+                            padding: '10px 16px',
+                            backgroundColor: 'var(--gray-200)',
+                            color: 'var(--gray-700)',
+                            border: 'none',
+                            borderRadius: 20,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontSize: 14,
+                          }}
+                          title="Attach image or PDF"
+                        >
+                          📎
+                        </button>
+                        <button
+                          onClick={handleSendMessage}
+                          disabled={sendingMessage}
+                          style={{
+                            padding: '10px 20px',
+                            backgroundColor: 'var(--primary)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 20,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontSize: 14,
+                          }}
+                        >
+                          {sendingMessage ? '...' : 'Send'}
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
 
               </div>

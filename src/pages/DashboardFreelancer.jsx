@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { freelancerService } from '../services/freelancerService'
 import { jobService } from '../services/jobService'
 import { conversationService } from '../services/conversationService'
+import { certificationService } from '../services/certificationService'
 import JobCard from '../components/JobCard'
 import { reviewService } from '../services/reviewService'
 import StarRating from '../components/StarRating'
@@ -34,6 +35,11 @@ export default function DashboardFreelancer() {
   const messagesEndRef = useRef(null)
   const [reviews, setReviews] = useState([])
   const [photoUploading, setPhotoUploading] = useState(false)
+  const [certifications, setCertifications] = useState([])
+  const [uploadingCert, setUploadingCert] = useState(false)
+  const [newCertTitle, setNewCertTitle] = useState('')
+  const [certFileInput, setCertFileInput] = useState(null)
+  const certFileRef = useRef(null)
 
 
   useEffect(() => {
@@ -78,6 +84,9 @@ export default function DashboardFreelancer() {
       if (data) {
         setProfile(data)
       }
+      // Load certifications
+      const certs = await certificationService.getCertificationsByFreelancer(currentUser.uid)
+      setCertifications(certs)
     } catch (err) {
       console.error(err)
     }
@@ -190,6 +199,61 @@ export default function DashboardFreelancer() {
       alert(`Error: ${err.message}`)
     }
     setPhotoUploading(false)
+  }
+
+  async function handleCertificationFileSelect(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file for your certification')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be under 5MB')
+      return
+    }
+
+    setCertFileInput(file)
+  }
+
+  async function handleAddCertification() {
+    if (!newCertTitle.trim() || !certFileInput) {
+      alert('Please enter a title and select an image')
+      return
+    }
+
+    setUploadingCert(true)
+    try {
+      const imageUrl = await certificationService.uploadCertificationImage(
+        currentUser.uid,
+        certFileInput
+      )
+
+      await certificationService.addCertification(currentUser.uid, {
+        title: newCertTitle,
+        imageUrl: imageUrl,
+      })
+
+      // Reload certifications
+      const certs = await certificationService.getCertificationsByFreelancer(currentUser.uid)
+      setCertifications(certs)
+
+      // Reset form
+      setNewCertTitle('')
+      setCertFileInput(null)
+      if (certFileRef.current) certFileRef.current.value = ''
+      alert('✓ Certification submitted for verification!')
+    } catch (err) {
+      alert(`Error: ${err.message}`)
+    }
+    setUploadingCert(false)
+  }
+
+  function handleRemoveCertFileInput() {
+    setCertFileInput(null)
+    if (certFileRef.current) certFileRef.current.value = ''
   }
 
   const jobsFinished = conversations.filter((conv) => conv.status === 'closed').length
@@ -899,6 +963,164 @@ export default function DashboardFreelancer() {
                           <span style={{ fontWeight: 500 }}>{cat}</span>
                         </label>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Certifications Section */}
+                  <div>
+                    <label style={{ fontWeight: 600, marginBottom: 12, display: 'block' }}>
+                      Certifications & Badges
+                      <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--gray-500)', marginLeft: 8 }}>
+                        (Upload images for verification)
+                      </span>
+                    </label>
+
+                    {certifications.length > 0 && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12, marginBottom: 16 }}>
+                        {certifications.map((cert) => (
+                          <div key={cert.id} style={{
+                            borderRadius: 8,
+                            overflow: 'hidden',
+                            border: '2px solid ' + (cert.status === 'verified' ? 'var(--success)' : cert.status === 'rejected' ? 'var(--danger)' : 'var(--gray-300)'),
+                            backgroundColor: cert.status === 'verified' ? 'var(--success-light)' : cert.status === 'rejected' ? 'var(--danger-light)' : 'var(--gray-50)',
+                          }}>
+                            <img
+                              src={cert.imageUrl}
+                              alt={cert.title}
+                              style={{ width: '100%', height: 120, objectFit: 'cover' }}
+                            />
+                            <div style={{ padding: 10 }}>
+                              <p style={{ fontSize: 12, margin: 0, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {cert.title}
+                              </p>
+                              <p style={{
+                                fontSize: 11,
+                                margin: '4px 0 0 0',
+                                fontWeight: 600,
+                                color: cert.status === 'verified' ? 'var(--success)' : cert.status === 'rejected' ? 'var(--danger)' : 'var(--gray-600)',
+                              }}>
+                                {cert.status === 'pending' && '⏳ Pending'}
+                                {cert.status === 'verified' && '✓ Verified'}
+                                {cert.status === 'rejected' && '❌ Rejected'}
+                              </p>
+                              {cert.rejectionReason && (
+                                <p style={{ fontSize: 11, margin: '4px 0 0 0', color: 'var(--danger)', fontStyle: 'italic' }}>
+                                  {cert.rejectionReason}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Add New Certification Form */}
+                    <div style={{
+                      padding: 16,
+                      backgroundColor: 'var(--gray-50)',
+                      borderRadius: 8,
+                      border: '2px dashed var(--primary-light)',
+                    }}>
+                      <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 12, color: 'var(--gray-700)' }}>
+                        Add New Certification
+                      </p>
+
+                      {certFileInput ? (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          padding: '12px',
+                          backgroundColor: 'white',
+                          borderRadius: 6,
+                          border: '1px solid var(--primary)',
+                          marginBottom: 12,
+                        }}>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ fontSize: 13, margin: 0, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {certFileInput.name}
+                            </p>
+                          </div>
+                          <button
+                            onClick={handleRemoveCertFileInput}
+                            style={{
+                              padding: '6px 12px',
+                              backgroundColor: 'var(--danger)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 4,
+                              cursor: 'pointer',
+                              fontSize: 12,
+                              fontWeight: 600,
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : null}
+
+                      <div style={{ display: 'grid', gap: 12 }}>
+                        <div>
+                          <input
+                            type="text"
+                            value={newCertTitle}
+                            onChange={(e) => setNewCertTitle(e.target.value)}
+                            placeholder="e.g., AWS Certified Solutions Architect"
+                            style={{
+                              width: '100%',
+                              padding: '10px 12px',
+                              borderRadius: 6,
+                              border: '1px solid var(--gray-300)',
+                              fontSize: 13,
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                        </div>
+
+                        <div>
+                          <input
+                            ref={certFileRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleCertificationFileSelect}
+                            style={{ display: 'none' }}
+                          />
+                          <button
+                            onClick={() => certFileRef.current?.click()}
+                            style={{
+                              width: '100%',
+                              padding: '10px 12px',
+                              backgroundColor: certFileInput ? 'var(--success-light)' : 'white',
+                              color: certFileInput ? 'var(--success)' : 'var(--gray-600)',
+                              border: '1px solid ' + (certFileInput ? 'var(--success)' : 'var(--gray-300)'),
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              fontSize: 13,
+                              fontWeight: 600,
+                            }}
+                          >
+                            {certFileInput ? '✓ Image Selected' : '📷 Choose Image'}
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={handleAddCertification}
+                          disabled={uploadingCert || !newCertTitle.trim() || !certFileInput}
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            backgroundColor: newCertTitle.trim() && certFileInput ? 'var(--primary)' : 'var(--gray-300)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 6,
+                            cursor: newCertTitle.trim() && certFileInput ? 'pointer' : 'default',
+                            fontSize: 13,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {uploadingCert ? 'Uploading...' : 'Submit for Verification'}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
