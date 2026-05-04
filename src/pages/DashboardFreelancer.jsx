@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthProvider'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { freelancerService } from '../services/freelancerService'
 import { jobService } from '../services/jobService'
 import { conversationService } from '../services/conversationService'
@@ -12,7 +12,8 @@ import StarRating from '../components/StarRating'
 export default function DashboardFreelancer() {
   const { currentUser } = useAuth()
   const location = useLocation()
-  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'jobs-feed')
+  const navigate = useNavigate()
+  const activeTab = location.state?.activeTab || 'jobs-feed'
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [profile, setProfile] = useState({
     displayName: '',
@@ -41,12 +42,6 @@ export default function DashboardFreelancer() {
   const [certFileInput, setCertFileInput] = useState(null)
   const certFileRef = useRef(null)
 
-
-  useEffect(() => {
-    if (location.state?.activeTab) {
-      setActiveTab(location.state.activeTab)
-    }
-  }, [location.state?.activeTab])
 
   useEffect(() => {
     if (!currentUser) return
@@ -354,7 +349,7 @@ export default function DashboardFreelancer() {
               }}>
                 <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>No applications yet</p>
                 <p style={{ fontSize: 14, marginBottom: 24 }}>Start applying to jobs from the feed!</p>
-                <button onClick={() => setActiveTab('jobs-feed')} style={{
+                <button onClick={() => navigate('/freelancer', { state: { activeTab: 'jobs-feed' } })} style={{
                   padding: '10px 20px',
                   backgroundColor: 'var(--primary)',
                   color: 'white',

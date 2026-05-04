@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthProvider'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { freelancerService } from '../services/freelancerService'
 import { jobService } from '../services/jobService'
 import { conversationService } from '../services/conversationService'
@@ -12,7 +12,8 @@ import { customerService } from '../services/customerService'
 export default function DashboardCustomer() {
   const { currentUser } = useAuth()
   const location = useLocation()
-  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'find-freelancers')
+  const navigate = useNavigate()
+  const activeTab = location.state?.activeTab || 'find-freelancers'
   const [selectedCategory, setSelectedCategory] = useState('')
   const [freelancers, setFreelancers] = useState([])
   const [customerJobs, setCustomerJobs] = useState([])
@@ -55,12 +56,6 @@ const [uploadingFile, setUploadingFile] = useState(false)
 const fileInputRef = useRef(null)
 
   
-  useEffect(() => {
-    if (location.state?.activeTab) {
-      setActiveTab(location.state.activeTab)
-    }
-  }, [location.state?.activeTab])
-
   useEffect(() => {
     if (!currentUser) return
 
@@ -367,7 +362,7 @@ async function handleAccept(conversationId) {
 
   function handleViewApplicants(jobId) {
     setFilteredByJob(jobId)
-    setActiveTab('messages')
+    navigate('/customer', { state: { activeTab: 'messages' } })
   }
 
   return (
@@ -500,7 +495,7 @@ async function handleAccept(conversationId) {
                 color: 'var(--gray-600)',
               }}>
                 <p style={{ fontSize: 16, marginBottom: 16 }}>No jobs posted yet</p>
-                <button onClick={() => setActiveTab('post-job')} style={{
+                <button onClick={() => navigate('/customer', { state: { activeTab: 'post-job' } })} style={{
                   padding: '10px 20px',
                   backgroundColor: 'var(--primary)',
                   color: 'white',
@@ -957,7 +952,7 @@ async function handleAccept(conversationId) {
                     <button onClick={() => {
                       setFilteredByJob(null)
                       setSelectedConversation(null)
-                      setActiveTab('my-jobs')
+                      navigate('/customer', { state: { activeTab: 'my-jobs' } })
                     }} style={{
                       background: 'none',
                       border: 'none',
