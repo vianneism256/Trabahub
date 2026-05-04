@@ -24,13 +24,26 @@ export const freelancerService = {
   CATEGORIES,
 
   async saveProfile(uid, data) {
-    const payload = {
+    const { error } = await supabase.from('freelancers').upsert({
       firebase_uid: uid,
-      ...data,
+      display_name: data.displayName,
+      email: data.email,
+      phone: data.phone || null,
+      bio: data.bio || null,
+      photo_url: data.photoURL || null,
       updated_at: new Date().toISOString(),
-    }
-    const { error } = await supabase.from('freelancers').upsert(payload, { onConflict: 'firebase_uid' })
+    }, { onConflict: 'firebase_uid' })
     if (error) throw error
+
+    if (Array.isArray(data.categories)) {
+      await supabase.from('freelancer_categories').delete().eq('freelancer_id', uid)
+      if (data.categories.length > 0) {
+        const { error: catError } = await supabase.from('freelancer_categories').insert(
+          data.categories.map((category) => ({ freelancer_id: uid, category }))
+        )
+        if (catError) throw catError
+      }
+    }
   },
 
   async getProfile(uid) {
