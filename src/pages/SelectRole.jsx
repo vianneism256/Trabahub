@@ -11,28 +11,29 @@ export default function SelectRole() {
   const location = useLocation()
   const { currentUser } = useAuth()
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    try {
-      const { error } = await supabase.from('users').upsert(
-        {
-          firebase_uid: currentUser.uid,
-          role,
-          display_name: currentUser.displayName || '',
-        },
-        { onConflict: 'firebase_uid' }
-      )
-      if (error) throw error
-      if (role === 'freelancer') navigate('/freelancer')
-      else if (role === 'admin') navigate('/admin')
-      else navigate('/customer')
-    } catch (err) {
-      setError(err.message)
-    }
-    setLoading(false)
+async function handleSubmit(e) {
+  e.preventDefault()
+  setLoading(true)
+  setError('')
+  try {
+    const { error } = await supabase.from('users').upsert(
+      {
+        firebase_uid: currentUser.uid,
+        role,
+        display_name: currentUser.displayName || currentUser.email,
+        email: currentUser.email,
+      },
+      { onConflict: 'firebase_uid' }
+    )
+    if (error) throw error
+    if (role === 'freelancer') navigate('/freelancer')
+    else if (role === 'admin') navigate('/admin')
+    else navigate('/customer')
+  } catch (err) {
+    setError(err.message)
   }
+  setLoading(false)
+}
 
   return (
     <div style={{ padding: 40, maxWidth: 500, margin: '0 auto', textAlign: 'center' }}>
