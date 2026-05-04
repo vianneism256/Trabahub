@@ -20,6 +20,7 @@ export default function SelectRole() {
         {
           firebase_uid: currentUser.uid,
           role,
+          display_name: currentUser.displayName || '',
         },
         { onConflict: 'firebase_uid' }
       )

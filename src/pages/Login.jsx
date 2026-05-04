@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthProvider'
 import { supabase } from '../supabase.js'
@@ -8,7 +8,13 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  const { login, signInWithGoogle } = useAuth()
+  const { login, signInWithGoogle, currentUser } = useAuth()
+
+  useEffect(() => {
+    if (currentUser) {
+      redirectByRole(currentUser.uid)
+    }
+  }, [currentUser])
 
   async function redirectByRole(uid) {
     try {
@@ -42,12 +48,7 @@ export default function Login() {
   async function handleGoogle() {
     setError('')
     try {
-      const user = await signInWithGoogle()
-      if (user.isNewUser) {
-        navigate('/select-role')
-      } else {
-        await redirectByRole(user.uid)
-      }
+      await signInWithGoogle()
     } catch (err) {
       setError(err.message)
     }
