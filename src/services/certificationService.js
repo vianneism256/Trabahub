@@ -90,6 +90,7 @@ export const certificationService = {
         return {
           id: logData?.id || cert.id,
           certificationId: cert.id,
+          changeType: 'certification_added',
           details: logData?.details || {
             certificationId: cert.id,
             certificationTitle: cert.title,
