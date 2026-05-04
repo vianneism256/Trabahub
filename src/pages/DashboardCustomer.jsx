@@ -187,17 +187,9 @@ const fileInputRef = useRef(null)
   async function handleCloseJob(jobId) {
     try {
       await jobService.updateJobStatus(jobId, 'closed')
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  async function handleCloseJob(jobId) {
-    try {
-      await jobService.updateJobStatus(jobId, 'closed')
       await conversationService.closeConversationsByJob(jobId)
     } catch (err) {
-      console.error(err)
+      alert(`Failed to close job: ${err.message}`)
     }
   }
 
