@@ -6,7 +6,10 @@ export const customerService = {
   async saveProfile(uid, data) {
     const payload = {
       firebase_uid: uid,
-      ...data,
+      display_name: data.displayName,
+      email: data.email,
+      phone: data.phone || null,
+      photo_url: data.photoURL || null,
       updated_at: new Date().toISOString(),
     }
     const { error } = await supabase.from('customers').upsert(payload, { onConflict: 'firebase_uid' })
@@ -20,7 +23,13 @@ export const customerService = {
       .eq('firebase_uid', uid)
       .maybeSingle()
     if (error) throw error
-    return data || null
+    if (!data) return null
+    return {
+      displayName: data.display_name || '',
+      email: data.email || '',
+      phone: data.phone || '',
+      photoURL: data.photo_url || null,
+    }
   },
 
   async uploadProfilePhoto(uid, file) {
