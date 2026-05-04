@@ -29,28 +29,34 @@ export default function SignUp() {
       if (data?.role === 'freelancer') navigate('/freelancer')
       else if (data?.role === 'admin') navigate('/admin')
       else if (data?.role === 'customer') navigate('/customer')
-      else navigate('/')
+      else navigate('/select-role') // ← fixed
     } catch (err) {
       console.error(err)
-      navigate('/')
+      navigate('/select-role') // ← fixed
     }
-  }  
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     try {
-      await signup(email, password, role, displayName)
+      const user = await signup(email, password)
+      // Save user to Supabase immediately with role
+      const { error: dbError } = await supabase.from('users').upsert({
+        firebase_uid: user.uid,
+        email: user.email,
+        display_name: displayName || email,
+        role,
+      }, { onConflict: 'firebase_uid' })
+      if (dbError) throw dbError
       if (role === 'freelancer') navigate('/freelancer')
-      else if (role === 'admin') navigate('/admin')
       else navigate('/customer')
     } catch (err) {
       setError(err.message)
     }
   }
 
-
-    async function handleGoogle() {
+  async function handleGoogle() {
     setError('')
     try {
       await signInWithGoogle()
@@ -93,7 +99,7 @@ export default function SignUp() {
         </button>
       </form>
 
-            <button onClick={handleGoogle} style={{
+      <button onClick={handleGoogle} style={{
         width: '100%',
         padding: '12px',
         marginTop: 15,

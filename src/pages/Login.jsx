@@ -16,23 +16,23 @@ export default function Login() {
     }
   }, [currentUser])
 
-  async function redirectByRole(uid) {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('role')
-        .eq('firebase_uid', uid)
-        .maybeSingle()
-      if (error) throw error
-      if (data?.role === 'freelancer') navigate('/freelancer')
-      else if (data?.role === 'admin') navigate('/admin')
-      else if (data?.role === 'customer') navigate('/customer')
-      else navigate('/')
-    } catch (err) {
-      console.error(err)
-      navigate('/')
-    }
+async function redirectByRole(uid) {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('role')
+      .eq('firebase_uid', uid)
+      .maybeSingle()
+    if (error) throw error
+    if (data?.role === 'freelancer') navigate('/freelancer')
+    else if (data?.role === 'admin') navigate('/admin')
+    else if (data?.role === 'customer') navigate('/customer')
+    else navigate('/select-role') // ← fix this line
+  } catch (err) {
+    console.error(err)
+    navigate('/select-role') // ← and this one
   }
+}
 
   async function handleSubmit(e) {
     e.preventDefault()
