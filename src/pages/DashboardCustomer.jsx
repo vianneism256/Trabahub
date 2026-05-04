@@ -927,7 +927,7 @@ async function handleAccept(conversationId) {
           </div>
         )}
 
-        {/* Messages Tab */}
+{/* Messages Tab */}
         {activeTab === 'messages' && (
           <div style={{
             display: 'flex',
@@ -938,7 +938,6 @@ async function handleAccept(conversationId) {
             overflow: 'hidden',
             border: '1px solid var(--gray-200)',
           }}>
-
             {/* LEFT PANEL */}
             <div style={{
               width: 320,
@@ -987,7 +986,6 @@ async function handleAccept(conversationId) {
                   </button>
                 )}
               </div>
-
               {conversations
                 .filter((c) => filteredByJob ? c.jobId === filteredByJob : true)
                 .length === 0 ? (
@@ -1018,27 +1016,26 @@ async function handleAccept(conversationId) {
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{
-                          width: 40, height: 40, borderRadius: '50%',
-                          overflow: 'hidden', backgroundColor: 'var(--gray-200)',
-                          flexShrink: 0, display: 'flex', alignItems: 'center',
-                          justifyContent: 'center', fontSize: 18,
-                        }}>
-                          {conv.freelancerPhoto
-                            ? <img src={conv.freelancerPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            : '👤'}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{
+                            width: 40, height: 40, borderRadius: '50%',
+                            overflow: 'hidden', backgroundColor: 'var(--gray-200)',
+                            flexShrink: 0, display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', fontSize: 18,
+                          }}>
+                            {conv.freelancerPhoto
+                              ? <img src={conv.freelancerPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              : '👤'}
+                          </div>
+                          <div>
+                            <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: 'var(--gray-900)' }}>
+                              {conv.freelancerName || 'Freelancer'}
+                            </p>
+                            <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>
+                              {conv.jobTitle}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: 'var(--gray-900)' }}>
-                            {conv.freelancerName || 'Freelancer'}
-                          </p>
-                          <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>
-                            {conv.jobTitle}
-                          </p>
-                        </div>
-                      </div>
                         <span style={{
                           fontSize: 11,
                           fontWeight: 600,
@@ -1047,12 +1044,10 @@ async function handleAccept(conversationId) {
                           backgroundColor:
                             conv.status === 'accepted' ? 'var(--success-light)' :
                             conv.status === 'declined' ? 'var(--danger-light)' :
-                            conv.status === 'closed' ? 'var(--gray-100)' :
                             'var(--gray-100)',
                           color:
                             conv.status === 'accepted' ? 'var(--success)' :
                             conv.status === 'declined' ? 'var(--danger)' :
-                            conv.status === 'closed' ? 'var(--gray-500)' :
                             'var(--gray-500)',
                         }}>
                           {conv.status === 'pending' ? 'Pending' :
@@ -1075,7 +1070,6 @@ async function handleAccept(conversationId) {
                   ))
               )}
             </div>
-
             {/* RIGHT PANEL */}
             {!selectedConversation ? (
               <div style={{
@@ -1093,8 +1087,6 @@ async function handleAccept(conversationId) {
               </div>
             ) : (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-
-                {/* Chat header */}
                 <div style={{
                   padding: '16px 20px',
                   borderBottom: '1px solid var(--gray-200)',
@@ -1119,12 +1111,13 @@ async function handleAccept(conversationId) {
                       </h4>
                     </div>
                     <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>
-                      {selectedConversation.jobTitle} • {selectedConversation.status === 'pending' ? 'Reviewing application' :
-                      selectedConversation.status === 'accepted' ? '✓ Assigned' :
-                      selectedConversation.status === 'declined' ? 'Declined' : 'Closed'}
+                      {selectedConversation.jobTitle} • {
+                        selectedConversation.status === 'pending' ? 'Reviewing application' :
+                        selectedConversation.status === 'accepted' ? '✓ Assigned' :
+                        selectedConversation.status === 'declined' ? 'Declined' : 'Closed'
+                      }
                     </p>
                   </div>
-
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'end', gap: 8 }}>
                     {selectedConversation.status === 'pending' && (
                       <>
@@ -1135,138 +1128,43 @@ async function handleAccept(conversationId) {
                               value={confirmText}
                               onChange={(e) => setConfirmText(e.target.value)}
                               placeholder='Type CONFIRM to assign'
-                              style={{
-                                padding: '8px 12px',
-                                borderRadius: 6,
-                                border: '1px solid var(--gray-300)',
-                                fontSize: 13,
-                                width: 180,
-                              }}
+                              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--gray-300)', fontSize: 13, width: 180 }}
                             />
-                            <button onClick={() => handleAccept(selectedConversation.id)} style={{
-                              padding: '8px 16px',
-                              backgroundColor: 'var(--success)',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: 6,
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              fontSize: 13,
-                            }}>
+                            <button onClick={() => handleAccept(selectedConversation.id)} style={{ padding: '8px 16px', backgroundColor: 'var(--success)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
                               ✓ Confirm
                             </button>
-                            <button onClick={() => { setAssigningConvId(null); setConfirmText('') }} style={{
-                              padding: '8px 16px',
-                              backgroundColor: 'var(--gray-200)',
-                              color: 'var(--gray-700)',
-                              border: 'none',
-                              borderRadius: 6,
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              fontSize: 13,
-                            }}>
+                            <button onClick={() => { setAssigningConvId(null); setConfirmText('') }} style={{ padding: '8px 16px', backgroundColor: 'var(--gray-200)', color: 'var(--gray-700)', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
                               Cancel
                             </button>
                           </div>
                         ) : (
-                          <button onClick={() => setAssigningConvId(selectedConversation.id)} style={{
-                            padding: '8px 18px',
-                            backgroundColor: 'var(--success)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 6,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            fontSize: 13,
-                          }}>
+                          <button onClick={() => setAssigningConvId(selectedConversation.id)} style={{ padding: '8px 18px', backgroundColor: 'var(--success)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
                             ✓ Assign Freelancer
                           </button>
                         )}
+                        <button onClick={() => handleDecline(selectedConversation.id)} style={{ padding: '8px 18px', backgroundColor: 'var(--danger)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+                          ✗ Decline
+                        </button>
                       </>
-                    )}
-                    {selectedConversation.status === 'pending' && (
-                      <button onClick={() => handleDecline(selectedConversation.id)} style={{
-                        padding: '8px 18px',
-                        backgroundColor: 'var(--danger)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 6,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        fontSize: 13,
-                      }}>
-                        ✗ Decline
-                      </button>
                     )}
                   </div>
                 </div>
-
-                {/* Leave a review — only when closed and was accepted */}
-                {selectedConversation.status === 'closed' &&
-                  !reviewSubmitted.includes(selectedConversation.id) && (
-                  <div style={{
-                    padding: '12px 20px',
-                    borderBottom: '1px solid var(--gray-200)',
-                    backgroundColor: 'var(--primary-light)',
-                  }}>
+                {selectedConversation.status === 'closed' && !reviewSubmitted.includes(selectedConversation.id) && (
+                  <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--gray-200)', backgroundColor: 'var(--primary-light)' }}>
                     {reviewingConvId !== selectedConversation.id ? (
-                      <button onClick={() => setReviewingConvId(selectedConversation.id)} style={{
-                        padding: '8px 16px',
-                        backgroundColor: 'var(--primary)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 6,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        fontSize: 13,
-                      }}>
+                      <button onClick={() => setReviewingConvId(selectedConversation.id)} style={{ padding: '8px 16px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
                         ★ Leave a Review
                       </button>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Rate this freelancer:</p>
-                        <StarRating
-                          value={reviewForm.rating}
-                          onChange={(r) => setReviewForm((prev) => ({ ...prev, rating: r }))}
-                          size={28}
-                        />
-                        <textarea
-                          value={reviewForm.comment}
-                          onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))}
-                          placeholder="Leave a comment (optional)..."
-                          style={{
-                            padding: 10,
-                            borderRadius: 6,
-                            border: '1px solid var(--gray-300)',
-                            fontFamily: 'inherit',
-                            fontSize: 13,
-                            minHeight: 70,
-                            resize: 'none',
-                          }}
-                        />
+                        <StarRating value={reviewForm.rating} onChange={(r) => setReviewForm((prev) => ({ ...prev, rating: r }))} size={28} />
+                        <textarea value={reviewForm.comment} onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))} placeholder="Leave a comment (optional)..." style={{ padding: 10, borderRadius: 6, border: '1px solid var(--gray-300)', fontFamily: 'inherit', fontSize: 13, minHeight: 70, resize: 'none' }} />
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button onClick={handleSubmitReview} disabled={reviewLoading} style={{
-                            padding: '8px 16px',
-                            backgroundColor: 'var(--success)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 6,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            fontSize: 13,
-                          }}>
+                          <button onClick={handleSubmitReview} disabled={reviewLoading} style={{ padding: '8px 16px', backgroundColor: 'var(--success)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
                             {reviewLoading ? 'Submitting...' : 'Submit Review'}
                           </button>
-                          <button onClick={() => setReviewingConvId(null)} style={{
-                            padding: '8px 16px',
-                            backgroundColor: 'var(--gray-200)',
-                            color: 'var(--gray-700)',
-                            border: 'none',
-                            borderRadius: 6,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            fontSize: 13,
-                          }}>
+                          <button onClick={() => setReviewingConvId(null)} style={{ padding: '8px 16px', backgroundColor: 'var(--gray-200)', color: 'var(--gray-700)', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
                             Cancel
                           </button>
                         </div>
@@ -1274,88 +1172,15 @@ async function handleAccept(conversationId) {
                     )}
                   </div>
                 )}
-
-                {/* Messages area */}
-                <div style={{
-                  flex: 1,
-                  overflowY: 'auto',
-                  padding: '20px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 12,
-                  backgroundColor: 'var(--gray-50)',
-                }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: 12, backgroundColor: 'var(--gray-50)' }}>
                   {messages.map((msg) => {
                     const isMe = msg.senderId === currentUser.uid
                     return (
-                      <div key={msg.id} style={{
-                        display: 'flex',
-                        justifyContent: isMe ? 'flex-end' : 'flex-start',
-                      }}>
-                        <div style={{
-                          maxWidth: '65%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 8,
-                        }}>
+                      <div key={msg.id} style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
+                        <div style={{ maxWidth: '65%', display: 'flex', flexDirection: 'column', gap: 8 }}>
                           {msg.text && (
-                            <div style={{
-                              padding: '10px 14px',
-                              borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                              backgroundColor: isMe ? 'var(--primary)' : 'white',
-                              color: isMe ? 'white' : 'var(--gray-900)',
-                              fontSize: 14,
-                              lineHeight: 1.5,
-                              boxShadow: 'var(--shadow-sm)',
-                            }}>
+                            <div style={{ padding: '10px 14px', borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px', backgroundColor: isMe ? 'var(--primary)' : 'white', color: isMe ? 'white' : 'var(--gray-900)', fontSize: 14, lineHeight: 1.5, boxShadow: 'var(--shadow-sm)' }}>
                               {msg.text}
-                            </div>
-                          )}
-                          {msg.file && (
-                            <div style={{
-                              padding: '10px 14px',
-                              borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                              backgroundColor: isMe ? 'var(--primary)' : 'white',
-                              boxShadow: 'var(--shadow-sm)',
-                            }}>
-                              {msg.file.type.startsWith('image/') ? (
-                                <a href={msg.file.url} target="_blank" rel="noopener noreferrer" style={{
-                                  display: 'inline-block',
-                                  maxWidth: '100%',
-                                  borderRadius: 8,
-                                  overflow: 'hidden',
-                                }}>
-                                  <img 
-                                    src={msg.file.url} 
-                                    alt={msg.file.name}
-                                    style={{
-                                      maxWidth: '300px',
-                                      maxHeight: '300px',
-                                      borderRadius: 8,
-                                    }}
-                                  />
-                                </a>
-                              ) : (
-                                <a 
-                                  href={msg.file.url} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8,
-                                    padding: '8px 12px',
-                                    backgroundColor: isMe ? 'rgba(255,255,255,0.2)' : 'var(--gray-100)',
-                                    borderRadius: 6,
-                                    textDecoration: 'none',
-                                    color: isMe ? 'white' : 'var(--primary)',
-                                    fontWeight: 600,
-                                    fontSize: 13,
-                                  }}
-                                >
-                                  📄 {msg.file.name}
-                                </a>
-                              )}
                             </div>
                           )}
                         </div>
@@ -1364,126 +1189,116 @@ async function handleAccept(conversationId) {
                   })}
                   <div ref={messagesEndRef} />
                 </div>
-
-                {/* Input area */}
-                <div style={{
-                  padding: '16px 20px',
-                  borderTop: '1px solid var(--gray-200)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 10,
-                  backgroundColor: 'white',
-                }}>
+                <div style={{ padding: '16px 20px', borderTop: '1px solid var(--gray-200)', display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: 'white' }}>
                   {selectedFile && (
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
-                      padding: '10px 12px',
-                      backgroundColor: 'var(--primary-light)',
-                      borderRadius: 8,
-                      border: '1px solid var(--primary)',
-                    }}>
-                      <div style={{ flex: 1, fontSize: 13, color: 'var(--primary)', fontWeight: 600 }}>
-                        📎 {selectedFile.name}
-                      </div>
-                      <button 
-                        onClick={handleFileRemove}
-                        style={{
-                          padding: '4px 12px',
-                          backgroundColor: 'transparent',
-                          color: 'var(--primary)',
-                          border: '1px solid var(--primary)',
-                          borderRadius: 4,
-                          cursor: 'pointer',
-                          fontSize: 12,
-                          fontWeight: 600,
-                        }}
-                      >
-                        Remove
-                      </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', backgroundColor: 'var(--primary-light)', borderRadius: 8, border: '1px solid var(--primary)' }}>
+                      <div style={{ flex: 1, fontSize: 13, color: 'var(--primary)', fontWeight: 600 }}>📎 {selectedFile.name}</div>
+                      <button onClick={handleFileRemove} style={{ padding: '4px 12px', backgroundColor: 'transparent', color: 'var(--primary)', border: '1px solid var(--primary)', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Remove</button>
                     </div>
                   )}
-                  <div style={{
-                    display: 'flex',
-                    gap: 10,
-                  }}>
+                  <div style={{ display: 'flex', gap: 10 }}>
                     {selectedConversation.status === 'closed' || selectedConversation.status === 'declined' ? (
-                      <div style={{
-                        flex: 1,
-                        textAlign: 'center',
-                        color: 'var(--gray-400)',
-                        fontSize: 13,
-                        padding: '10px',
-                      }}>
+                      <div style={{ flex: 1, textAlign: 'center', color: 'var(--gray-400)', fontSize: 13, padding: '10px' }}>
                         {selectedConversation.status === 'declined' && 'This application was declined.'}
                         {selectedConversation.status === 'closed' && 'This job is closed.'}
                       </div>
                     ) : (
                       <>
-                        <input
-                          type="text"
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                          placeholder="Type a message..."
-                          style={{
-                            flex: 1,
-                            padding: '10px 14px',
-                            borderRadius: 20,
-                            border: '1px solid var(--gray-300)',
-                            fontSize: 14,
-                            outline: 'none',
-                          }}
-                        />
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          onChange={handleFileSelect}
-                          accept=".png,.jpg,.jpeg,.gif,.pdf"
-                          style={{ display: 'none' }}
-                        />
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          style={{
-                            padding: '10px 16px',
-                            backgroundColor: 'var(--gray-200)',
-                            color: 'var(--gray-700)',
-                            border: 'none',
-                            borderRadius: 20,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            fontSize: 14,
-                          }}
-                          title="Attach image or PDF"
-                        >
-                          📎
-                        </button>
-                        <button
-                          onClick={handleSendMessage}
-                          disabled={sendingMessage}
-                          style={{
-                            padding: '10px 20px',
-                            backgroundColor: 'var(--primary)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 20,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            fontSize: 14,
-                          }}
-                        >
+                        <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} placeholder="Type a message..." style={{ flex: 1, padding: '10px 14px', borderRadius: 20, border: '1px solid var(--gray-300)', fontSize: 14, outline: 'none' }} />
+                        <input ref={fileInputRef} type="file" onChange={handleFileSelect} accept=".png,.jpg,.jpeg,.gif,.pdf" style={{ display: 'none' }} />
+                        <button onClick={() => fileInputRef.current?.click()} style={{ padding: '10px 16px', backgroundColor: 'var(--gray-200)', color: 'var(--gray-700)', border: 'none', borderRadius: 20, fontWeight: 600, cursor: 'pointer', fontSize: 14 }} title="Attach image or PDF">📎</button>
+                        <button onClick={handleSendMessage} disabled={sendingMessage} style={{ padding: '10px 20px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: 20, fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
                           {sendingMessage ? '...' : 'Send'}
                         </button>
                       </>
                     )}
                   </div>
                 </div>
-
               </div>
             )}
           </div>
         )}
+
+        {/* My Profile Tab — FIXED: now inside the wrapper */}
+        {activeTab === 'my-profile' && (
+          <div>
+            {!isEditingProfile ? (
+              <div style={{ backgroundColor: 'white', padding: 32, borderRadius: 8, boxShadow: 'var(--shadow-sm)', maxWidth: 800 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                  <h2 style={{ margin: 0 }}>Your Profile</h2>
+                  <button onClick={() => setIsEditingProfile(true)} style={{ padding: '10px 20px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+                    Edit Profile
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gap: 24 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                    <div style={{ width: 80, height: 80, borderRadius: '50%', overflow: 'hidden', backgroundColor: 'var(--gray-200)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>
+                      {customerProfile.photoURL ? <img src={customerProfile.photoURL} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '👤'}
+                    </div>
+                    <div>
+                      <p style={{ fontWeight: 600, marginBottom: 8, fontSize: 14 }}>Profile Photo</p>
+                      <label style={{ padding: '8px 16px', backgroundColor: 'var(--primary)', color: 'white', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'inline-block' }}>
+                        {photoUploading ? 'Uploading...' : customerProfile.photoURL ? 'Change Photo' : 'Upload Photo'}
+                        <input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={photoUploading} style={{ display: 'none' }} />
+                      </label>
+                      <p style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 6 }}>Max 5MB. JPG, PNG, or GIF.</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Name</p>
+                    <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--gray-900)', margin: 0 }}>{customerProfile.displayName || '—'}</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Email</p>
+                    <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--gray-900)', margin: 0 }}>{customerProfile.email || '—'}</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Phone</p>
+                    <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--gray-900)', margin: 0 }}>
+                      {customerProfile.phone ? <a href={`tel:${customerProfile.phone}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>{customerProfile.phone}</a> : '—'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ backgroundColor: 'white', padding: 32, borderRadius: 8, boxShadow: 'var(--shadow-sm)', maxWidth: 800 }}>
+                <h2 style={{ marginBottom: 24 }}>Edit Your Profile</h2>
+                {profileMessage && (
+                  <div style={{ padding: 12, marginBottom: 24, borderRadius: 6, backgroundColor: profileMessage.includes('Error') || profileMessage.includes('Please') ? 'var(--danger-light)' : 'var(--success-light)', color: profileMessage.includes('Error') || profileMessage.includes('Please') ? 'var(--danger)' : 'var(--success)', fontWeight: 600 }}>
+                    {profileMessage}
+                  </div>
+                )}
+                <div style={{ display: 'grid', gap: 24 }}>
+                  <div>
+                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Display Name</label>
+                    <input type="text" name="displayName" value={customerProfile.displayName} onChange={handleProfileChange} placeholder="Your name" />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Email</label>
+                    <input type="email" name="email" value={customerProfile.email} onChange={handleProfileChange} placeholder="your@email.com" />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Phone (optional)</label>
+                    <input type="tel" name="phone" value={customerProfile.phone} onChange={handleProfileChange} placeholder="(555) 123-4567" />
+                  </div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <button onClick={handleSaveProfile} disabled={profileLoading} style={{ flex: 1, padding: '14px 24px', backgroundColor: 'var(--success)', color: 'white', border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
+                      {profileLoading ? 'Saving...' : 'Save Profile'}
+                    </button>
+                    <button onClick={() => { setIsEditingProfile(false); setProfileMessage('') }} style={{ flex: 1, padding: '14px 24px', backgroundColor: 'var(--gray-200)', color: 'var(--gray-800)', border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+      </div> {/* closes maxWidth 1200 */}
+    </div> {/* closes outer padding */}
+  )
+}
 
         
 

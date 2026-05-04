@@ -24,13 +24,13 @@ async function redirectByRole(uid) {
       .eq('firebase_uid', uid)
       .maybeSingle()
     if (error) throw error
-    if (data?.role === 'freelancer') navigate('/freelancer')
+    if (data?.role === 'freelancer') navigate('/freelancer', { state: { activeTab: 'jobs-feed', role: 'freelancer' } })
     else if (data?.role === 'admin') navigate('/admin')
-    else if (data?.role === 'customer') navigate('/customer')
-    else navigate('/select-role') // ← fix this line
+    else if (data?.role === 'customer') navigate('/customer', { state: { activeTab: 'find-freelancers', role: 'customer' } })
+    else navigate('/select-role')
   } catch (err) {
     console.error(err)
-    navigate('/select-role') // ← and this one
+    navigate('/select-role')
   }
 }
 

@@ -26,9 +26,9 @@ async function handleSubmit(e) {
       { onConflict: 'firebase_uid' }
     )
     if (error) throw error
-    if (role === 'freelancer') navigate('/freelancer')
+    if (role === 'freelancer') navigate('/freelancer', { state: { activeTab: 'jobs-feed', role: 'freelancer' } })
     else if (role === 'admin') navigate('/admin')
-    else navigate('/customer')
+    else navigate('/customer', { state: { activeTab: 'find-freelancers', role: 'customer' } })
   } catch (err) {
     setError(err.message)
   }
