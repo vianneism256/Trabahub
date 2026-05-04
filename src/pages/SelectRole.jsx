@@ -20,7 +20,6 @@ export default function SelectRole() {
         {
           firebase_uid: currentUser.uid,
           role,
-          updated_at: new Date().toISOString(),
         },
         { onConflict: 'firebase_uid' }
       )
