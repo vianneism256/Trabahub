@@ -16,7 +16,13 @@ export default function ForgotPassword() {
       await resetPassword(email)
       setMessage('If that email exists, you will receive a reset link. Please check your spam folder aswell')
     } catch (err) {
-      setError(err.message)
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') {
+        setError('No account found with that email address.')
+      } else if (err.code === 'auth/invalid-credential' || err.message?.includes('400')) {
+        setError('This account uses Google Sign-In and does not have a password to reset.')
+      } else {
+        setError(err.message)
+      }
     }
   }
 
