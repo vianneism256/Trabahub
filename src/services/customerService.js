@@ -1,28 +1,37 @@
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '../firebaseConfig'
+import { storage } from '../firebaseConfig'
+import { supabase } from '../supabase.js'
 
 export const customerService = {
   async saveProfile(uid, data) {
-    const ref = doc(db, 'customers', uid)
-    await setDoc(ref, {
-      uid,
+    const payload = {
+      firebase_uid: uid,
       ...data,
-      updatedAt: Date.now(),
-    }, { merge: true })
+      updated_at: new Date().toISOString(),
+    }
+    const { error } = await supabase.from('customers').upsert(payload, { onConflict: 'firebase_uid' })
+    if (error) throw error
   },
 
   async getProfile(uid) {
-    const ref = doc(db, 'customers', uid)
-    const snap = await getDoc(ref)
-    return snap.exists() ? snap.data() : null
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('firebase_uid', uid)
+      .maybeSingle()
+    if (error) throw error
+    return data || null
   },
 
   async uploadProfilePhoto(uid, file) {
     const storageRef = ref(storage, `customer-photos/${uid}`)
     await uploadBytes(storageRef, file)
     const url = await getDownloadURL(storageRef)
-    await updateDoc(doc(db, 'customers', uid), { photoURL: url })
+    const { error } = await supabase
+      .from('customers')
+      .update({ photo_url: url })
+      .eq('firebase_uid', uid)
+    if (error) throw error
     return url
   },
 }

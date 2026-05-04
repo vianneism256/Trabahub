@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { doc, setDoc } from 'firebase/firestore'
-import { db } from '../firebaseConfig'
 import { useAuth } from '../context/AuthProvider'
+import { supabase } from '../supabase.js'
 
 export default function SelectRole() {
   const [role, setRole] = useState('customer')
@@ -17,15 +16,15 @@ export default function SelectRole() {
     setLoading(true)
     setError('')
     try {
-      await setDoc(
-        doc(db, 'users', currentUser.uid),
+      const { error } = await supabase.from('users').upsert(
         {
+          firebase_uid: currentUser.uid,
           role,
-          verified: false,
-          updatedAt: Date.now(),
+          updated_at: new Date().toISOString(),
         },
-        { merge: true }
+        { onConflict: 'firebase_uid' }
       )
+      if (error) throw error
       if (role === 'freelancer') navigate('/freelancer')
       else if (role === 'admin') navigate('/admin')
       else navigate('/customer')

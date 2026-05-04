@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthProvider'
-import { getDoc, doc } from 'firebase/firestore'
-import { db } from '../firebaseConfig'
+import { supabase } from '../supabase.js'
 import { conversationService } from '../services/conversationService'
 
 export default function Navigation() {
@@ -47,10 +46,13 @@ export default function Navigation() {
 
   async function loadUserRole() {
     try {
-      const docSnap = await getDoc(doc(db, 'users', currentUser.uid))
-      if (docSnap.exists()) {
-        setUserRole(docSnap.data().role)
-      }
+      const { data, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('firebase_uid', currentUser.uid)
+        .maybeSingle()
+      if (error) throw error
+      setUserRole(data?.role || null)
     } catch (err) {
       console.error(err)
     }

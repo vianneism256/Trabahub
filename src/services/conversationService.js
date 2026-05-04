@@ -1,165 +1,246 @@
-import {
-  collection,
-  addDoc,
-  query,
-  where,
-  getDocs,
-  doc,
-  updateDoc,
-  onSnapshot,
-  orderBy,
-  serverTimestamp,
-  deleteDoc,
-} from 'firebase/firestore'
-import { storage, db } from '../firebaseConfig'
+import { supabase } from '../supabase.js'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { storage } from '../firebaseConfig'
+
+function mapConversationRow(row) {
+  return {
+    id: row.id,
+    jobId: row.job_id,
+    jobTitle: row.job_title,
+    freelancerId: row.freelancer_id,
+    customerId: row.customer_id,
+    freelancerName: row.freelancer_name,
+    customerName: row.customer_name,
+    freelancerPhoto: row.freelancer_photo,
+    customerPhoto: row.customer_photo,
+    status: row.status,
+    lastMessage: row.last_message,
+    lastMessageAt: row.last_message_at,
+    createdAt: row.created_at,
+  }
+}
+
+function mapMessageRow(row) {
+  return {
+    id: row.id,
+    conversationId: row.conversation_id,
+    senderId: row.sender_id,
+    text: row.text,
+    file: row.file || null,
+    createdAt: row.created_at,
+  }
+}
 
 export const conversationService = {
+  async createConversation(jobId, jobTitle, freelancerId, freelancerName, freelancerPhoto, customerId, customerName, customerPhoto, firstMessage) {
+    const { data: existing, error: existingError } = await supabase
+      .from('conversations')
+      .select('id')
+      .eq('job_id', jobId)
+      .eq('freelancer_id', freelancerId)
+      .maybeSingle()
 
-async createConversation(jobId, jobTitle, freelancerId, freelancerName, freelancerPhoto, customerId, customerName, customerPhoto, firstMessage) {
-    // Check if conversation already exists for this job + freelancer
-    const q = query(
-      collection(db, 'conversations'),
-      where('jobId', '==', jobId),
-      where('freelancerId', '==', freelancerId)
-    )
-    const existing = await getDocs(q)
-    if (!existing.empty) return existing.docs[0].id
+    if (existingError) throw existingError
+    if (existing?.id) return existing.id
 
-    // Create the conversation
-    const convRef = await addDoc(collection(db, 'conversations'), {
-      jobId,
-      jobTitle,
-      freelancerId,
-      freelancerName,
-      freelancerPhoto: freelancerPhoto || null,
-      customerId,
-      customerName: customerName || 'Customer',
-      customerPhoto: customerPhoto || null,
-      status: 'pending',
-      lastMessage: firstMessage,
-      lastMessageAt: Date.now(),
-      createdAt: Date.now(),
-    })
+    const { data: created, error: createError } = await supabase
+      .from('conversations')
+      .insert({
+        job_id: jobId,
+        job_title: jobTitle,
+        freelancer_id: freelancerId,
+        freelancer_name: freelancerName,
+        freelancer_photo: freelancerPhoto || null,
+        customer_id: customerId,
+        customer_name: customerName || 'Customer',
+        customer_photo: customerPhoto || null,
+        status: 'pending',
+        last_message: firstMessage,
+        last_message_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single()
 
-    // Add the first message as a subcollection
-    await addDoc(collection(db, 'conversations', convRef.id, 'messages'), {
-      senderId: freelancerId,
+    if (createError) throw createError
+
+    await supabase.from('messages').insert({
+      conversation_id: created.id,
+      sender_id: freelancerId,
       text: firstMessage,
-      createdAt: serverTimestamp(),
+      created_at: new Date().toISOString(),
     })
 
-    return convRef.id
+    return created.id
   },
 
-  // Get all conversations for a freelancer
   async getConversationsByFreelancer(freelancerId) {
-    const q = query(
-      collection(db, 'conversations'),
-      where('freelancerId', '==', freelancerId)
-    )
-    const snap = await getDocs(q)
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => b.lastMessageAt - a.lastMessageAt)
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('freelancer_id', freelancerId)
+    if (error) throw error
+    return data
+      .map(mapConversationRow)
+      .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
   },
 
-  // Get all conversations for a customer
   async getConversationsByCustomer(customerId) {
-    const q = query(
-      collection(db, 'conversations'),
-      where('customerId', '==', customerId)
-    )
-    const snap = await getDocs(q)
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => b.lastMessageAt - a.lastMessageAt)
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('customer_id', customerId)
+    if (error) throw error
+    return data
+      .map(mapConversationRow)
+      .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
   },
 
-  // Send a message inside a conversation
   async sendMessage(conversationId, senderId, text) {
-    await addDoc(collection(db, 'conversations', conversationId, 'messages'), {
-      senderId,
+    await supabase.from('messages').insert({
+      conversation_id: conversationId,
+      sender_id: senderId,
       text,
-      createdAt: serverTimestamp(),
+      created_at: new Date().toISOString(),
     })
-    // Update last message preview on the conversation
-    await updateDoc(doc(db, 'conversations', conversationId), {
-      lastMessage: text,
-      lastMessageAt: Date.now(),
-    })
+    const { error } = await supabase
+      .from('conversations')
+      .update({
+        last_message: text,
+        last_message_at: new Date().toISOString(),
+      })
+      .eq('id', conversationId)
+    if (error) throw error
   },
 
-  // Real-time listener for messages inside a conversation
   listenToMessages(conversationId, callback) {
-    const q = query(
-      collection(db, 'conversations', conversationId, 'messages'),
-      orderBy('createdAt', 'asc')
-    )
-    return onSnapshot(q, (snap) => {
-      const messages = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-      callback(messages)
-    })
+    const fetchMessages = async () => {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true })
+      if (error) {
+        console.error(error)
+        return
+      }
+      callback(data.map(mapMessageRow))
+    }
+
+    fetchMessages()
+
+    const channel = supabase
+      .channel(`messages-${conversationId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
+        async () => {
+          await fetchMessages()
+        }
+      )
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
   },
 
-  // Customer accepts/declines a conversation request
   async updateStatus(conversationId, status) {
-    await updateDoc(doc(db, 'conversations', conversationId), { status })
+    const { error } = await supabase
+      .from('conversations')
+      .update({ status })
+      .eq('id', conversationId)
+    if (error) throw error
   },
 
-  // Close all conversations for a job (when job is filled)
   async closeConversationsByJob(jobId) {
-    const q = query(collection(db, 'conversations'), where('jobId', '==', jobId))
-    const snap = await getDocs(q)
-    const updates = snap.docs.map((d) => 
-      updateDoc(doc(db, 'conversations', d.id), { status: 'closed' })
-    )
-    await Promise.all(updates)
+    const { error } = await supabase
+      .from('conversations')
+      .update({ status: 'closed' })
+      .eq('job_id', jobId)
+    if (error) throw error
   },
 
   listenToFreelancerConversations(freelancerId, callback) {
-    const q = query(
-      collection(db, 'conversations'),
-      where('freelancerId', '==', freelancerId)
-    )
-    return onSnapshot(q, (snap) => {
-      const data = snap.docs
-        .map((d) => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => b.lastMessageAt - a.lastMessageAt)
-      callback(data)
-    })
+    const fetchConversations = async () => {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('freelancer_id', freelancerId)
+      if (error) {
+        console.error(error)
+        return
+      }
+      callback(
+        data
+          .map(mapConversationRow)
+          .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+      )
+    }
+
+    fetchConversations()
+
+    const channel = supabase
+      .channel(`conversations-freelancer-${freelancerId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'conversations', filter: `freelancer_id=eq.${freelancerId}` },
+        async () => {
+          await fetchConversations()
+        }
+      )
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
   },
 
   listenToCustomerConversations(customerId, callback) {
-    const q = query(
-      collection(db, 'conversations'),
-      where('customerId', '==', customerId)
-    )
-    return onSnapshot(q, (snap) => {
-      const data = snap.docs
-        .map((d) => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => b.lastMessageAt - a.lastMessageAt)
-      callback(data)
-    })
+    const fetchConversations = async () => {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('customer_id', customerId)
+      if (error) {
+        console.error(error)
+        return
+      }
+      callback(
+        data
+          .map(mapConversationRow)
+          .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+      )
+    }
+
+    fetchConversations()
+
+    const channel = supabase
+      .channel(`conversations-customer-${customerId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'conversations', filter: `customer_id=eq.${customerId}` },
+        async () => {
+          await fetchConversations()
+        }
+      )
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
   },
 
   async deleteConversation(jobId, freelancerId) {
-    const q = query(
-      collection(db, 'conversations'),
-      where('jobId', '==', jobId),
-      where('freelancerId', '==', freelancerId)
-    )
-    const snap = await getDocs(q)
-    const deletes = snap.docs.map((d) => deleteDoc(doc(db, 'conversations', d.id)))
-    await Promise.all(deletes)
+    const { error } = await supabase
+      .from('conversations')
+      .delete()
+      .eq('job_id', jobId)
+      .eq('freelancer_id', freelancerId)
+    if (error) throw error
   },
 
-  // Upload file for a message (images and PDFs only)
   async uploadMessageFile(conversationId, senderId, file) {
     const allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'application/pdf']
     if (!allowedTypes.includes(file.type)) {
       throw new Error('Only PNG, JPG, GIF images and PDFs are allowed')
     }
 
-    const maxSize = 10 * 1024 * 1024 // 10MB
+    const maxSize = 10 * 1024 * 1024
     if (file.size > maxSize) {
       throw new Error('File must be under 10MB')
     }
@@ -173,24 +254,27 @@ async createConversation(jobId, jobTitle, freelancerId, freelancerName, freelanc
     return {
       name: file.name,
       type: file.type,
-      url: url,
+      url,
       size: file.size,
     }
   },
 
-  // Send a message with file attachment
   async sendMessageWithFile(conversationId, senderId, text, fileData) {
-    await addDoc(collection(db, 'conversations', conversationId, 'messages'), {
-      senderId,
+    await supabase.from('messages').insert({
+      conversation_id: conversationId,
+      sender_id: senderId,
       text: text || '',
       file: fileData,
-      createdAt: serverTimestamp(),
+      created_at: new Date().toISOString(),
     })
-    // Update last message preview on the conversation
-    const preview = fileData.name ? `📎 ${fileData.name}` : (text || '[File]')
-    await updateDoc(doc(db, 'conversations', conversationId), {
-      lastMessage: preview,
-      lastMessageAt: Date.now(),
-    })
+    const preview = fileData.name ? `📎 ${fileData.name}` : text || '[File]'
+    const { error } = await supabase
+      .from('conversations')
+      .update({
+        last_message: preview,
+        last_message_at: new Date().toISOString(),
+      })
+      .eq('id', conversationId)
+    if (error) throw error
   },
 }

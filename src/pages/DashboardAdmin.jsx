@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { collection, onSnapshot } from 'firebase/firestore'
-import { db } from '../firebaseConfig'
+import { supabase } from '../supabase.js'
 import { freelancerService } from '../services/freelancerService'
 import { jobService } from '../services/jobService'
 import { certificationService } from '../services/certificationService'
@@ -18,30 +17,32 @@ export default function DashboardAdmin() {
 useEffect(() => {
     setLoading(true)
 
-    const unsubFreelancers = onSnapshot(collection(db, 'freelancers'), (snap) => {
-      setFreelancers(snap.docs.map((d) => d.data()))
-      setLoading(false)
-    })
+    async function loadAdminData() {
+      try {
+        const freelancers = await freelancerService.getAllFreelancers()
+        const { data: userRows, error: usersError } = await supabase.from('users').select('*')
+        const { data: jobRows, error: jobsError } = await supabase.from('jobs').select('*')
 
-    const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
-      setUsers(snap.docs.map((d) => d.data()))
-    })
+        if (usersError) throw usersError
+        if (jobsError) throw jobsError
 
-    const unsubJobs = onSnapshot(collection(db, 'jobs'), (snap) => {
-      setJobs(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-    })
+        setFreelancers(freelancers)
+        setUsers(userRows.map((user) => ({ ...user, uid: user.firebase_uid })))
+        setJobs(jobRows)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadAdminData()
 
     const unsubEditLogs = certificationService.listenToPendingEditLogs((logs) => {
       setEditLogs(logs)
     })
 
     return () => {
-      unsubFreelancers()
-      unsubUsers()
-      unsubJobs()
-      unsubEditLogs()
-    }
-  }, [])
 
   async function toggleVerified(uid, currentStatus) {
     try {

@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthProvider'
-import { db } from '../firebaseConfig'
-import { doc, getDoc } from 'firebase/firestore'
+import { supabase } from '../supabase.js'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -13,15 +12,16 @@ export default function Login() {
 
   async function redirectByRole(uid) {
     try {
-      const userDoc = await getDoc(doc(db, 'users', uid))
-      if (userDoc.exists()) {
-        const role = userDoc.data().role
-        if (role === 'freelancer') navigate('/freelancer')
-        else if (role === 'admin') navigate('/admin')
-        else navigate('/customer')
-      } else {
-        navigate('/')
-      }
+      const { data, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('firebase_uid', uid)
+        .maybeSingle()
+      if (error) throw error
+      if (data?.role === 'freelancer') navigate('/freelancer')
+      else if (data?.role === 'admin') navigate('/admin')
+      else if (data?.role === 'customer') navigate('/customer')
+      else navigate('/')
     } catch (err) {
       console.error(err)
       navigate('/')

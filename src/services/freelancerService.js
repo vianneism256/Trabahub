@@ -1,53 +1,91 @@
-import { doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore'
-import { storage } from '../firebaseConfig'
+import { supabase } from '../supabase.js'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db } from '../firebaseConfig'
+import { storage } from '../firebaseConfig'
 
 const CATEGORIES = ['Plumbing', 'Electrician', 'Carpenter', 'Cleaning', 'Painting', 'HVAC', 'Roofing', 'Landscaping']
+
+function mapFreelancerRow(row) {
+  return {
+    uid: row.firebase_uid,
+    displayName: row.display_name,
+    email: row.email,
+    bio: row.bio,
+    phone: row.phone,
+    photoURL: row.photo_url,
+    averageRating: row.average_rating,
+    totalReviews: row.total_reviews,
+    verified: row.verified,
+    updatedAt: row.updated_at,
+    categories: row.freelancer_categories?.map((cat) => cat.category) || [],
+  }
+}
 
 export const freelancerService = {
   CATEGORIES,
 
   async saveProfile(uid, data) {
-    const ref = doc(db, 'freelancers', uid)
-    await setDoc(ref, {
-      uid,
+    const payload = {
+      firebase_uid: uid,
       ...data,
-      updatedAt: Date.now(),
-    }, { merge: true })
+      updated_at: new Date().toISOString(),
+    }
+    const { error } = await supabase.from('freelancers').upsert(payload, { onConflict: 'firebase_uid' })
+    if (error) throw error
   },
 
   async getProfile(uid) {
-    const ref = doc(db, 'freelancers', uid)
-    const snap = await getDoc(ref)
-    return snap.exists() ? snap.data() : null
+    const { data, error } = await supabase
+      .from('freelancers')
+      .select('*, freelancer_categories(category)')
+      .eq('firebase_uid', uid)
+      .maybeSingle()
+    if (error) throw error
+    return data ? mapFreelancerRow(data) : null
   },
 
   async getAllFreelancers() {
-    const q = query(collection(db, 'freelancers'))
-    const snap = await getDocs(q)
-    return snap.docs.map((doc) => doc.data())
+    const { data, error } = await supabase
+      .from('freelancers')
+      .select('*, freelancer_categories(category)')
+    if (error) throw error
+    return data.map(mapFreelancerRow)
   },
 
   async getFreelancersByCategory(category) {
-    const q = query(
-      collection(db, 'freelancers'),
-      where('categories', 'array-contains', category)
-    )
-    const snap = await getDocs(q)
-    return snap.docs.map((doc) => doc.data())
+    const { data: categories, error: categoriesError } = await supabase
+      .from('freelancer_categories')
+      .select('freelancer_id')
+      .eq('category', category)
+    if (categoriesError) throw categoriesError
+
+    const ids = categories.map((item) => item.freelancer_id)
+    if (ids.length === 0) return []
+
+    const { data, error } = await supabase
+      .from('freelancers')
+      .select('*, freelancer_categories(category)')
+      .in('firebase_uid', ids)
+    if (error) throw error
+    return data.map(mapFreelancerRow)
   },
 
   async setVerified(uid, verified) {
-    const ref = doc(db, 'freelancers', uid)
-    await updateDoc(ref, { verified })
+    const { error } = await supabase
+      .from('freelancers')
+      .update({ verified })
+      .eq('firebase_uid', uid)
+    if (error) throw error
   },
 
   async uploadProfilePhoto(uid, file) {
     const storageRef = ref(storage, `profile-photos/${uid}`)
     await uploadBytes(storageRef, file)
     const url = await getDownloadURL(storageRef)
-    await updateDoc(doc(db, 'freelancers', uid), { photoURL: url })
+    const { error } = await supabase
+      .from('freelancers')
+      .update({ photo_url: url })
+      .eq('firebase_uid', uid)
+    if (error) throw error
     return url
   },
 }

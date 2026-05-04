@@ -1,60 +1,80 @@
-import {
-  collection,
-  addDoc,
-  query,
-  where,
-  getDocs,
-  onSnapshot,
-  doc,
-  updateDoc,
-} from 'firebase/firestore'
-import { db } from '../firebaseConfig'
+import { supabase } from '../supabase.js'
 
 export const reviewService = {
   async submitReview(freelancerId, customerId, jobId, jobTitle, rating, comment) {
-    // Check if review already exists for this job
-    const q = query(
-      collection(db, 'reviews'),
-      where('jobId', '==', jobId),
-      where('customerId', '==', customerId)
-    )
-    const existing = await getDocs(q)
-    if (!existing.empty) throw new Error('You already reviewed this job')
+    const { data: existing, error: existingError } = await supabase
+      .from('reviews')
+      .select('id')
+      .eq('job_id', jobId)
+      .eq('customer_id', customerId)
 
-    // Add review
-    await addDoc(collection(db, 'reviews'), {
-      freelancerId,
-      customerId,
-      jobId,
-      jobTitle,
+    if (existingError) throw existingError
+    if (existing.length > 0) throw new Error('You already reviewed this job')
+
+    const { error: insertError } = await supabase.from('reviews').insert({
+      freelancer_id: freelancerId,
+      customer_id: customerId,
+      job_id: jobId,
+      job_title: jobTitle,
       rating,
       comment,
-      createdAt: Date.now(),
+      created_at: new Date().toISOString(),
     })
+    if (insertError) throw insertError
 
-    // Update freelancer average rating
-    const allReviews = await getDocs(
-      query(collection(db, 'reviews'), where('freelancerId', '==', freelancerId))
-    )
-    const ratings = allReviews.docs.map((d) => d.data().rating)
+    const { data: allReviews, error: reviewsError } = await supabase
+      .from('reviews')
+      .select('rating')
+      .eq('freelancer_id', freelancerId)
+    if (reviewsError) throw reviewsError
+
+    const ratings = allReviews.map((review) => review.rating)
     const average = ratings.reduce((a, b) => a + b, 0) / ratings.length
 
-    await updateDoc(doc(db, 'freelancers', freelancerId), {
-      averageRating: parseFloat(average.toFixed(1)),
-      totalReviews: ratings.length,
-    })
+    const { error: updateError } = await supabase
+      .from('freelancers')
+      .update({
+        average_rating: parseFloat(average.toFixed(1)),
+        total_reviews: ratings.length,
+      })
+      .eq('firebase_uid', freelancerId)
+    if (updateError) throw updateError
   },
 
   listenToFreelancerReviews(freelancerId, callback) {
-    const q = query(
-      collection(db, 'reviews'),
-      where('freelancerId', '==', freelancerId)
-    )
-    return onSnapshot(q, (snap) => {
-      const data = snap.docs
-        .map((d) => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => b.createdAt - a.createdAt)
-      callback(data)
-    })
+    const fetchReviews = async () => {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('freelancer_id', freelancerId)
+      if (error) {
+        console.error(error)
+        return
+      }
+      callback(
+        data
+          .map((review) => ({
+            ...review,
+            createdAt: review.created_at,
+            jobTitle: review.job_title,
+          }))
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      )
+    }
+
+    fetchReviews()
+
+    const channel = supabase
+      .channel(`reviews-${freelancerId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'reviews', filter: `freelancer_id=eq.${freelancerId}` },
+        async () => {
+          await fetchReviews()
+        }
+      )
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
   },
 }

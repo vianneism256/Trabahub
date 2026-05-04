@@ -8,8 +8,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from 'firebase/auth'
-import { auth, db } from '../firebaseConfig'
-import { doc, setDoc, getDoc } from 'firebase/firestore'
+import { auth } from '../firebaseConfig'
+import { supabase } from '../supabase.js'
 
 const AuthContext = createContext()
 
@@ -24,14 +24,14 @@ export function AuthProvider({ children }) {
   async function signup(email, password, role = 'customer', displayName = '') {
     const cred = await createUserWithEmailAndPassword(auth, email, password)
     const user = cred.user
-    await setDoc(doc(db, 'users', user.uid), {
-      uid: user.uid,
+    const { error } = await supabase.from('users').insert({
+      firebase_uid: user.uid,
       email: user.email,
-      displayName,
+      display_name: displayName,
       role,
-      verified: false,
-      createdAt: Date.now(),
+      created_at: new Date().toISOString(),
     })
+    if (error) throw error
     return user
   }
 
@@ -44,12 +44,13 @@ export function AuthProvider({ children }) {
     const provider = new GoogleAuthProvider()
     const cred = await signInWithPopup(auth, provider)
     const user = cred.user
-    // ensure user doc exists
-    const ref = doc(db, 'users', user.uid)
-    const snap = await getDoc(ref)
-    if (!snap.exists()) {
-      // user is signing up for first time with Google
-      // don't create doc yet - let SelectRole page handle it
+    const { data, error } = await supabase
+      .from('users')
+      .select('role')
+      .eq('firebase_uid', user.uid)
+      .maybeSingle()
+    if (error) throw error
+    if (!data) {
       return { ...user, isNewUser: true }
     }
     return user

@@ -1,19 +1,22 @@
-import {
-  collection,
-  addDoc,
-  query,
-  where,
-  getDocs,
-  doc,
-  updateDoc,
-  onSnapshot,
-  serverTimestamp,
-} from 'firebase/firestore'
-import { storage, db } from '../firebaseConfig'
+import { supabase } from '../supabase.js'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { storage } from '../firebaseConfig'
+
+function mapCertificationRow(row) {
+  return {
+    id: row.id,
+    freelancerId: row.freelancer_id,
+    title: row.title,
+    imageUrl: row.image_url,
+    status: row.status,
+    rejectionReason: row.rejection_reason,
+    submittedAt: row.submitted_at,
+    verifiedAt: row.verified_at,
+    verifiedBy: row.verified_by,
+  }
+}
 
 export const certificationService = {
-  // Upload certification image to Firebase Storage
   async uploadCertificationImage(freelancerId, file) {
     const timestamp = Date.now()
     const filename = `${freelancerId}-${timestamp}-${file.name}`
@@ -23,182 +26,165 @@ export const certificationService = {
     return url
   },
 
-  // Add new certification to freelancer's profile
   async addCertification(freelancerId, certData) {
-    const docRef = await addDoc(collection(db, 'certifications'), {
-      freelancerId,
-      title: certData.title,
-      imageUrl: certData.imageUrl,
-      status: 'pending',
-      submittedAt: serverTimestamp(),
-      verifiedAt: null,
-      verifiedBy: null,
-      rejectionReason: null,
-    })
+    const { data: certification, error } = await supabase
+      .from('certifications')
+      .insert({
+        freelancer_id: freelancerId,
+        title: certData.title,
+        image_url: certData.imageUrl,
+        status: 'pending',
+        submitted_at: new Date().toISOString(),
+        verified_at: null,
+        verified_by: null,
+        rejection_reason: null,
+      })
+      .select('id')
+      .single()
 
-    // Create edit log entry
+    if (error) throw error
+
     await this.createEditLog(freelancerId, 'certification_added', {
-      certificationId: docRef.id,
+      certificationId: certification.id,
       certificationTitle: certData.title,
       certificationImage: certData.imageUrl,
     })
 
-    return docRef.id
+    return certification.id
   },
 
-  // Get all certifications for a freelancer
   async getCertificationsByFreelancer(freelancerId) {
-    const q = query(
-      collection(db, 'certifications'),
-      where('freelancerId', '==', freelancerId)
-    )
-    const snap = await getDocs(q)
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    const { data, error } = await supabase
+      .from('certifications')
+      .select('*')
+      .eq('freelancer_id', freelancerId)
+    if (error) throw error
+    return data.map(mapCertificationRow)
   },
 
-  // Get pending certifications for admin review
-  async getPendingCertifications() {
-    const q = query(
-      collection(db, 'certifications'),
-      where('status', '==', 'pending')
-    )
-    const snap = await getDocs(q)
-    const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-
-    // Fetch freelancer names
-    const withFreelancerNames = await Promise.all(
-      docs.map(async (cert) => {
-        const freelancerRef = doc(db, 'freelancers', cert.freelancerId)
-        const freelancerSnap = await getDocs(query(
-          collection(db, 'freelancers'),
-          where('uid', '==', cert.freelancerId)
-        ))
-        const freelancer = freelancerSnap.docs[0]?.data()
-        return {
-          ...cert,
-          freelancerName: freelancer?.displayName || 'Unknown',
-          freelancerPhoto: freelancer?.photoURL || null,
-        }
-      })
-    )
-
-    return withFreelancerNames
-  },
-
-  // Admin verifies a certification
-  async verifyCertification(certificationId, adminUid) {
-    await updateDoc(doc(db, 'certifications', certificationId), {
-      status: 'verified',
-      verifiedAt: serverTimestamp(),
-      verifiedBy: adminUid,
-    })
-  },
-
-  // Admin rejects a certification with reason
-  async rejectCertification(certificationId, adminUid, reason) {
-    await updateDoc(doc(db, 'certifications', certificationId), {
-      status: 'rejected',
-      verifiedAt: serverTimestamp(),
-      verifiedBy: adminUid,
-      rejectionReason: reason,
-    })
-  },
-
-  // Create an edit log entry
-  async createEditLog(freelancerId, changeType, details) {
-    await addDoc(collection(db, 'editLogs'), {
-      freelancerId,
-      changeType, // 'certification_added', 'profile_updated', etc.
-      details,
-      createdAt: serverTimestamp(),
-      status: 'pending', // pending, reviewed, approved
-    })
-  },
-
-  // Get edit logs for a freelancer
-  async getEditLogsByFreelancer(freelancerId) {
-    const q = query(
-      collection(db, 'editLogs'),
-      where('freelancerId', '==', freelancerId)
-    )
-    const snap = await getDocs(q)
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-  },
-
-  // Get all pending edit logs (for admin)
   async getPendingEditLogs() {
-    const q = query(
-      collection(db, 'editLogs'),
-      where('status', '==', 'pending')
-    )
-    const snap = await getDocs(q)
-    const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    const { data: pendingCerts, error: certError } = await supabase
+      .from('certifications')
+      .select('*')
+      .eq('status', 'pending')
+    if (certError) throw certError
 
-    // Fetch freelancer details
-    const withFreelancerInfo = await Promise.all(
-      docs.map(async (log) => {
-        const freelancerSnap = await getDocs(query(
-          collection(db, 'freelancers'),
-          where('uid', '==', log.freelancerId)
-        ))
-        const freelancer = freelancerSnap.docs[0]?.data()
+    const logs = await Promise.all(
+      pendingCerts.map(async (cert) => {
+        const { data: logData, error: logError } = await supabase
+          .from('edit_logs')
+          .select('*')
+          .contains('details', { certificationId: cert.id })
+          .eq('change_type', 'certification_added')
+          .limit(1)
+          .maybeSingle()
+        if (logError) throw logError
+
+        const { data: freelancer, error: freelancerError } = await supabase
+          .from('freelancers')
+          .select('display_name, email, photo_url')
+          .eq('firebase_uid', cert.freelancer_id)
+          .maybeSingle()
+        if (freelancerError) throw freelancerError
+
         return {
-          ...log,
-          freelancerName: freelancer?.displayName || 'Unknown',
+          id: logData?.id || cert.id,
+          certificationId: cert.id,
+          details: logData?.details || {
+            certificationId: cert.id,
+            certificationTitle: cert.title,
+            certificationImage: cert.image_url,
+          },
+          freelancerName: freelancer?.display_name || 'Unknown',
           freelancerEmail: freelancer?.email || 'N/A',
-          freelancerPhoto: freelancer?.photoURL || null,
+          freelancerPhoto: freelancer?.photo_url || null,
+          createdAt: logData?.created_at || cert.submitted_at,
         }
       })
     )
 
-    return withFreelancerInfo
+    return logs
   },
 
-  // Mark edit log as reviewed
+  async verifyCertification(certificationId, adminUid) {
+    const { error } = await supabase
+      .from('certifications')
+      .update({
+        status: 'verified',
+        verified_at: new Date().toISOString(),
+        verified_by: adminUid,
+      })
+      .eq('id', certificationId)
+    if (error) throw error
+  },
+
+  async rejectCertification(certificationId, adminUid, reason) {
+    const { error } = await supabase
+      .from('certifications')
+      .update({
+        status: 'rejected',
+        verified_at: new Date().toISOString(),
+        verified_by: adminUid,
+        rejection_reason: reason,
+      })
+      .eq('id', certificationId)
+    if (error) throw error
+  },
+
+  async createEditLog(freelancerId, changeType, details) {
+    const { error } = await supabase.from('edit_logs').insert({
+      freelancer_id: freelancerId,
+      change_type: changeType,
+      details,
+      created_at: new Date().toISOString(),
+    })
+    if (error) throw error
+  },
+
+  async getEditLogsByFreelancer(freelancerId) {
+    const { data, error } = await supabase
+      .from('edit_logs')
+      .select('*')
+      .eq('freelancer_id', freelancerId)
+    if (error) throw error
+    return data
+  },
+
   async markEditLogReviewed(logId) {
-    await updateDoc(doc(db, 'editLogs', logId), {
-      status: 'reviewed',
-    })
+    const { error } = await supabase.from('edit_logs').delete().eq('id', logId)
+    if (error) throw error
   },
 
-  // Real-time listener for all edit logs
   listenToPendingEditLogs(callback) {
-    const q = query(
-      collection(db, 'editLogs'),
-      where('status', '==', 'pending')
-    )
-    return onSnapshot(q, async (snap) => {
-      const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    const fetchPending = async () => {
+      const logs = await this.getPendingEditLogs()
+      callback(logs)
+    }
 
-      // Fetch freelancer details
-      const withFreelancerInfo = await Promise.all(
-        docs.map(async (log) => {
-          const freelancerSnap = await getDocs(query(
-            collection(db, 'freelancers'),
-            where('uid', '==', log.freelancerId)
-          ))
-          const freelancer = freelancerSnap.docs[0]?.data()
-          return {
-            ...log,
-            freelancerName: freelancer?.displayName || 'Unknown',
-            freelancerEmail: freelancer?.email || 'N/A',
-            freelancerPhoto: freelancer?.photoURL || null,
-          }
-        })
+    fetchPending()
+
+    const channel = supabase
+      .channel('certifications-pending')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'certifications', filter: 'status=eq.pending' },
+        async () => {
+          await fetchPending()
+        }
       )
+      .subscribe()
 
-      callback(withFreelancerInfo)
-    })
+    return () => supabase.removeChannel(channel)
   },
 
-  // Get verified certifications for a freelancer (for public profile)
   async getVerifiedCertificationsByFreelancer(freelancerId) {
-    const q = query(
-      collection(db, 'certifications'),
-      where('freelancerId', '==', freelancerId),
-      where('status', '==', 'verified')
-    )
-    const snap = await getDocs(q)
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    const { data, error } = await supabase
+      .from('certifications')
+      .select('*')
+      .eq('freelancer_id', freelancerId)
+      .eq('status', 'verified')
+    if (error) throw error
+    return data.map(mapCertificationRow)
   },
 }
+
