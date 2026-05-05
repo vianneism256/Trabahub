@@ -320,9 +320,37 @@ export default function DashboardFreelancer() {
   const jobsFinished = conversations.filter((conv) => conv.status === 'closed').length
   const reviewCount = profile.totalReviews ?? reviews.length
 
+  const AdPlaceholder = () => (
+    <aside style={{ width: 160, flexShrink: 0, position: 'sticky', top: 80 }}>
+      <div style={{
+        width: 160,
+        minHeight: 600,
+        backgroundColor: 'white',
+        borderRadius: 8,
+        border: '2px dashed var(--gray-300)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        color: 'var(--gray-400)',
+        fontSize: 12,
+        textAlign: 'center',
+        padding: 16,
+        boxSizing: 'border-box',
+      }}>
+        <span style={{ fontSize: 24 }}>📢</span>
+        <span style={{ fontWeight: 600, color: 'var(--gray-500)' }}>Advertisement</span>
+        <span style={{ fontSize: 10 }}>160 × 600</span>
+      </div>
+    </aside>
+  )
+
   return (
     <div style={{ padding: '40px 20px', backgroundColor: 'var(--gray-50)', minHeight: 'calc(100vh - 120px)' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1560, margin: '0 auto', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+        <AdPlaceholder />
+        <div style={{ flex: 1, minWidth: 0 }}>
         {/* Jobs Feed Tab */}
         {activeTab === 'jobs-feed' && (
           <div>
@@ -1338,6 +1366,8 @@ export default function DashboardFreelancer() {
           </div>
         )}
 
+        </div>
+        <AdPlaceholder />
       </div>
     </div>
   )
