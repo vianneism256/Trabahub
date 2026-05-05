@@ -163,13 +163,8 @@ export const jobService = {
 
     const channel = supabase
       .channel(`jobs-customer-${uid}-${Date.now()}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'jobs', filter: `customer_id=eq.${uid}` },
-        async () => {
-          await fetchCustomerJobs()
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs', filter: `customer_id=eq.${uid}` }, fetchCustomerJobs)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'applications' }, fetchCustomerJobs)
       .subscribe()
 
     return () => supabase.removeChannel(channel)

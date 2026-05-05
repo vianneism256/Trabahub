@@ -1165,11 +1165,39 @@ async function handleAccept(conversationId) {
                     const isMe = msg.senderId === currentUser.uid
                     return (
                       <div key={msg.id} style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
-                        <div style={{ maxWidth: '65%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div style={{ maxWidth: '65%', display: 'flex', flexDirection: 'column', gap: 6, alignItems: isMe ? 'flex-end' : 'flex-start' }}>
                           {msg.text && (
                             <div style={{ padding: '10px 14px', borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px', backgroundColor: isMe ? 'var(--primary)' : 'white', color: isMe ? 'white' : 'var(--gray-900)', fontSize: 14, lineHeight: 1.5, boxShadow: 'var(--shadow-sm)' }}>
                               {msg.text}
                             </div>
+                          )}
+                          {msg.file && (
+                            msg.file.type?.startsWith('image/') ? (
+                              <div style={{ borderRadius: 12, overflow: 'hidden', boxShadow: 'var(--shadow-sm)', maxWidth: 260 }}>
+                                <img src={msg.file.url} alt={msg.file.name} style={{ width: '100%', display: 'block' }} />
+                              </div>
+                            ) : (
+                              <a
+                                href={msg.file.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 8,
+                                  padding: '10px 14px',
+                                  backgroundColor: isMe ? 'var(--primary)' : 'white',
+                                  color: isMe ? 'white' : 'var(--gray-900)',
+                                  borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                                  textDecoration: 'none',
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  boxShadow: 'var(--shadow-sm)',
+                                }}
+                              >
+                                📎 {msg.file.name}
+                              </a>
+                            )
                           )}
                         </div>
                       </div>
