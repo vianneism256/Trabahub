@@ -33,7 +33,6 @@ export default function DashboardCustomer() {
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
   const [sendingMessage, setSendingMessage] = useState(false)
-  const messagesEndRef = useRef(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [viewingFreelancer, setViewingFreelancer] = useState(null)
   const [reviewForm, setReviewForm] = useState({ rating: 0, comment: '' })
@@ -88,11 +87,6 @@ const fileInputRef = useRef(null)
 
 
 
-  useEffect(() => {
-    if (messagesEndRef.current && activeTab === 'messages') {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [messages, activeTab])
 
   useEffect(() => {
     if (!selectedConversation) return
@@ -1203,7 +1197,6 @@ async function handleAccept(conversationId) {
                       </div>
                     )
                   })}
-                  <div ref={messagesEndRef} />
                 </div>
                 <div style={{ padding: '16px 20px', borderTop: '1px solid var(--gray-200)', display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: 'white' }}>
                   {selectedFile && (
