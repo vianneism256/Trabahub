@@ -27,7 +27,12 @@ useEffect(() => {
         if (jobsError) throw jobsError
 
         setFreelancers(freelancers)
-        setUsers(userRows.map((user) => ({ ...user, uid: user.firebase_uid })))
+        setUsers(userRows.map((user) => ({
+          ...user,
+          uid: user.firebase_uid,
+          displayName: user.display_name,
+          createdAt: user.created_at,
+        })))
         setJobs(jobRows)
       } catch (err) {
         console.error(err)
