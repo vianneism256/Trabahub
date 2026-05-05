@@ -204,7 +204,7 @@ export const conversationService = {
 
     const { error } = await supabase
       .from('conversations')
-      .update({ status: 'closed' })
+      .update({ status: 'filled' })
       .eq('job_id', jobId)
       .eq('status', 'pending')
       .neq('id', acceptedConversationId)

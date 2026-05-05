@@ -528,17 +528,20 @@ export default function DashboardFreelancer() {
                         backgroundColor:
                           conv.status === 'accepted' ? 'var(--success-light)' :
                           conv.status === 'declined' ? 'var(--danger-light)' :
+                          conv.status === 'filled' ? 'var(--gray-100)' :
                           conv.status === 'closed' ? 'var(--gray-100)' :
                           'var(--gray-100)',
                         color:
                           conv.status === 'accepted' ? 'var(--success)' :
                           conv.status === 'declined' ? 'var(--danger)' :
+                          conv.status === 'filled' ? 'var(--gray-500)' :
                           conv.status === 'closed' ? 'var(--gray-500)' :
                           'var(--gray-500)',
                       }}>
                         {conv.status === 'pending' ? 'Pending' :
                          conv.status === 'accepted' ? 'Accepted' :
                          conv.status === 'declined' ? 'Declined' :
+                         conv.status === 'filled' ? 'Filled' :
                          'Closed'}
                       </span>
                     </div>
@@ -603,6 +606,7 @@ export default function DashboardFreelancer() {
                       {selectedConversation.status === 'pending' && 'Application under review'}
                       {selectedConversation.status === 'accepted' && '✓ You have been assigned to this job!'}
                       {selectedConversation.status === 'declined' && 'Customer declined this application'}
+                      {selectedConversation.status === 'filled' && 'This position was filled by another freelancer'}
                       {selectedConversation.status === 'closed' && 'This job has been closed'}
                     </p>
                   </div>
@@ -676,10 +680,11 @@ export default function DashboardFreelancer() {
                   padding: '16px 20px',
                   borderTop: '1px solid var(--gray-200)',
                   display: 'flex',
+                  flexDirection: 'column',
                   gap: 10,
                   backgroundColor: 'white',
                 }}>
-                  {selectedConversation.status === 'closed' || selectedConversation.status === 'declined' ? (
+                  {selectedConversation.status === 'closed' || selectedConversation.status === 'declined' || selectedConversation.status === 'filled' ? (
                     <div style={{
                       flex: 1,
                       textAlign: 'center',
@@ -687,7 +692,9 @@ export default function DashboardFreelancer() {
                       fontSize: 13,
                       padding: '10px',
                     }}>
-                      {selectedConversation.status === 'closed' ? 'This job is closed.' : 'This application was declined.'}
+                      {selectedConversation.status === 'closed' ? 'This job is closed.' :
+                       selectedConversation.status === 'filled' ? 'This position was filled by another freelancer.' :
+                       'This application was declined.'}
                     </div>
                   ) : (
                     <>

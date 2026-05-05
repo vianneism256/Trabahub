@@ -1036,6 +1036,7 @@ async function handleAccept(conversationId) {
                           {conv.status === 'pending' ? 'Pending' :
                            conv.status === 'accepted' ? 'Accepted' :
                            conv.status === 'declined' ? 'Declined' :
+                           conv.status === 'filled' ? 'Filled' :
                            'Closed'}
                         </span>
                       </div>
