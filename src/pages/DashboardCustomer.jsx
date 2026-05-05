@@ -89,10 +89,10 @@ const fileInputRef = useRef(null)
 
 
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && activeTab === 'messages') {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [messages])
+  }, [messages, activeTab])
 
   useEffect(() => {
     if (!selectedConversation) return
