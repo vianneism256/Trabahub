@@ -31,11 +31,19 @@ export const reviewService = {
     const ratings = allReviews.map((review) => review.rating)
     const average = ratings.reduce((a, b) => a + b, 0) / ratings.length
 
+    const { data: freelancer, error: freelancerError } = await supabase
+      .from('freelancers')
+      .select('jobs_completed')
+      .eq('firebase_uid', freelancerId)
+      .single()
+    if (freelancerError) throw freelancerError
+
     const { error: updateError } = await supabase
       .from('freelancers')
       .update({
         average_rating: parseFloat(average.toFixed(1)),
         total_reviews: ratings.length,
+        jobs_completed: (freelancer.jobs_completed || 0) + 1,
       })
       .eq('firebase_uid', freelancerId)
     if (updateError) throw updateError
