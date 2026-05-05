@@ -333,6 +333,8 @@ async function handleAccept(conversationId) {
         reviewForm.rating,
         reviewForm.comment
       )
+      await conversationService.updateStatus(selectedConversation.id, 'closed')
+      setSelectedConversation((prev) => ({ ...prev, status: 'closed' }))
       setReviewSubmitted((prev) => [...prev, selectedConversation.id])
       setReviewingConvId(null)
       setReviewForm({ rating: 0, comment: '' })
