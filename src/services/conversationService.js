@@ -65,12 +65,13 @@ export const conversationService = {
 
     if (createError) throw createError
 
-    await supabase.from('messages').insert({
+    const { error: msgError } = await supabase.from('messages').insert({
       conversation_id: created.id,
       sender_id: freelancerId,
       text: firstMessage,
-      created_at: Date.now(),
+      created_at: new Date().toISOString(),
     })
+    if (msgError) throw msgError
 
     return created.id
   },
@@ -102,7 +103,7 @@ export const conversationService = {
       conversation_id: conversationId,
       sender_id: senderId,
       text,
-      created_at: Date.now(),
+      created_at: new Date().toISOString(),
     })
     const { error } = await supabase
       .from('conversations')
@@ -286,7 +287,7 @@ export const conversationService = {
       sender_id: senderId,
       text: text || '',
       file: fileData,
-      created_at: Date.now(),
+      created_at: new Date().toISOString(),
     })
     const preview = fileData.name ? `📎 ${fileData.name}` : text || '[File]'
     const { error } = await supabase
