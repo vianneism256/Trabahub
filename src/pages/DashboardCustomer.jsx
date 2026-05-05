@@ -1133,7 +1133,7 @@ async function handleAccept(conversationId) {
                     )}
                   </div>
                 </div>
-                {selectedConversation.status === 'closed' && !reviewSubmitted.includes(selectedConversation.id) && (
+                {(selectedConversation.status === 'closed' || selectedConversation.status === 'accepted') && !reviewSubmitted.includes(selectedConversation.id) && (
                   <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--gray-200)', backgroundColor: 'var(--primary-light)' }}>
                     {reviewingConvId !== selectedConversation.id ? (
                       <button onClick={() => setReviewingConvId(selectedConversation.id)} style={{ padding: '8px 16px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
