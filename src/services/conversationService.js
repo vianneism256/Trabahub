@@ -57,8 +57,8 @@ export const conversationService = {
         customer_photo: customerPhoto || null,
         status: 'pending',
         last_message: firstMessage,
-        last_message_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
+        last_message_at: Date.now(),
+        created_at: Date.now(),
       })
       .select('id')
       .single()
@@ -69,7 +69,7 @@ export const conversationService = {
       conversation_id: created.id,
       sender_id: freelancerId,
       text: firstMessage,
-      created_at: new Date().toISOString(),
+      created_at: Date.now(),
     })
 
     return created.id
@@ -102,13 +102,13 @@ export const conversationService = {
       conversation_id: conversationId,
       sender_id: senderId,
       text,
-      created_at: new Date().toISOString(),
+      created_at: Date.now(),
     })
     const { error } = await supabase
       .from('conversations')
       .update({
         last_message: text,
-        last_message_at: new Date().toISOString(),
+        last_message_at: Date.now(),
       })
       .eq('id', conversationId)
     if (error) throw error
@@ -286,14 +286,14 @@ export const conversationService = {
       sender_id: senderId,
       text: text || '',
       file: fileData,
-      created_at: new Date().toISOString(),
+      created_at: Date.now(),
     })
     const preview = fileData.name ? `📎 ${fileData.name}` : text || '[File]'
     const { error } = await supabase
       .from('conversations')
       .update({
         last_message: preview,
-        last_message_at: new Date().toISOString(),
+        last_message_at: Date.now(),
       })
       .eq('id', conversationId)
     if (error) throw error
