@@ -339,7 +339,7 @@ export default function DashboardFreelancer() {
         padding: 16,
         boxSizing: 'border-box',
       }}>
-        <span style={{ fontSize: 24 }}>📢</span>
+        <span style={{ fontSize: 24 }}></span>
         <span style={{ fontWeight: 600, color: 'var(--gray-500)' }}>Advertisement</span>
         <span style={{ fontSize: 10 }}>160 × 600</span>
       </div>
