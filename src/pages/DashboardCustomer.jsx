@@ -99,12 +99,6 @@ const fileInputRef = useRef(null)
   }, [selectedConversation])
 
 
-  // Keep selectedConversation in sync when conversations list updates
-  useEffect(() => {
-    if (!selectedConversation) return
-    const updated = conversations.find((c) => c.id === selectedConversation.id)
-    if (updated) setSelectedConversation(updated)
-  }, [conversations])
 
 
   useEffect(() => {
