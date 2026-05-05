@@ -18,7 +18,7 @@ export const reviewService = {
       job_title: jobTitle,
       rating,
       comment,
-      created_at: new Date().toISOString(),
+      created_at: Date.now(),
     })
     if (insertError) throw insertError
 
