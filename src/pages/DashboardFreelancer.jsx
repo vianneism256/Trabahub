@@ -1299,6 +1299,7 @@ export default function DashboardFreelancer() {
                       {notif.type === 'certification_rejected' && '❌'}
                       {notif.type === 'application_accepted' && '🎉'}
                       {notif.type === 'application_declined' && '📋'}
+                      {notif.type === 'job_filled' && '🔒'}
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>

@@ -192,6 +192,36 @@ export const conversationService = {
     if (error) throw error
   },
 
+  async closeOtherPendingConversations(jobId, acceptedConversationId) {
+    const { data: pending } = await supabase
+      .from('conversations')
+      .select('id, freelancer_id, job_title')
+      .eq('job_id', jobId)
+      .eq('status', 'pending')
+      .neq('id', acceptedConversationId)
+
+    if (!pending?.length) return
+
+    const { error } = await supabase
+      .from('conversations')
+      .update({ status: 'closed' })
+      .eq('job_id', jobId)
+      .eq('status', 'pending')
+      .neq('id', acceptedConversationId)
+    if (error) throw error
+
+    await Promise.all(
+      pending.map((conv) =>
+        notificationService.createNotification(
+          conv.freelancer_id,
+          'job_filled',
+          'Job Has Been Filled',
+          `The job "${conv.job_title}" has been assigned to another freelancer.`
+        )
+      )
+    )
+  },
+
   listenToFreelancerConversations(freelancerId, callback) {
     const fetchConversations = async () => {
       const { data, error } = await supabase
