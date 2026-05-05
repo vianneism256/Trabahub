@@ -1,6 +1,7 @@
 import { supabase } from '../supabase.js'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '../firebaseConfig'
+import { notificationService } from './notificationService.js'
 
 function mapConversationRow(row) {
   return {
@@ -149,6 +150,26 @@ export const conversationService = {
       .update({ status })
       .eq('id', conversationId)
     if (error) throw error
+
+    if (status === 'accepted' || status === 'declined') {
+      const { data: conv } = await supabase
+        .from('conversations')
+        .select('freelancer_id, job_title')
+        .eq('id', conversationId)
+        .single()
+
+      if (conv) {
+        const isAccepted = status === 'accepted'
+        await notificationService.createNotification(
+          conv.freelancer_id,
+          isAccepted ? 'application_accepted' : 'application_declined',
+          isAccepted ? 'Application Accepted!' : 'Application Declined',
+          isAccepted
+            ? `Your application for "${conv.job_title}" has been accepted. You got the job!`
+            : `Your application for "${conv.job_title}" was not selected this time.`
+        )
+      }
+    }
   },
 
   async closeConversationsByJob(jobId) {

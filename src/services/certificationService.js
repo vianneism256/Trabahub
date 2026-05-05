@@ -1,6 +1,7 @@
 import { supabase } from '../supabase.js'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '../firebaseConfig'
+import { notificationService } from './notificationService.js'
 
 function mapCertificationRow(row) {
   return {
@@ -108,6 +109,12 @@ export const certificationService = {
   },
 
   async verifyCertification(certificationId, adminUid) {
+    const { data: cert } = await supabase
+      .from('certifications')
+      .select('freelancer_id, title')
+      .eq('id', certificationId)
+      .single()
+
     const { error } = await supabase
       .from('certifications')
       .update({
@@ -117,9 +124,24 @@ export const certificationService = {
       })
       .eq('id', certificationId)
     if (error) throw error
+
+    if (cert) {
+      await notificationService.createNotification(
+        cert.freelancer_id,
+        'certification_verified',
+        'Certification Verified',
+        `Your certification "${cert.title}" has been verified by the admin!`
+      )
+    }
   },
 
   async rejectCertification(certificationId, adminUid, reason) {
+    const { data: cert } = await supabase
+      .from('certifications')
+      .select('freelancer_id, title')
+      .eq('id', certificationId)
+      .single()
+
     const { error } = await supabase
       .from('certifications')
       .update({
@@ -130,6 +152,15 @@ export const certificationService = {
       })
       .eq('id', certificationId)
     if (error) throw error
+
+    if (cert) {
+      await notificationService.createNotification(
+        cert.freelancer_id,
+        'certification_rejected',
+        'Certification Rejected',
+        `Your certification "${cert.title}" was rejected${reason ? `: ${reason}` : '.'}`
+      )
+    }
   },
 
   async createEditLog(freelancerId, changeType, details) {

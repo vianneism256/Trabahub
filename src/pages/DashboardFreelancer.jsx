@@ -8,6 +8,7 @@ import { certificationService } from '../services/certificationService'
 import JobCard from '../components/JobCard'
 import { reviewService } from '../services/reviewService'
 import StarRating from '../components/StarRating'
+import { notificationService } from '../services/notificationService'
 
 export default function DashboardFreelancer() {
   const { currentUser } = useAuth()
@@ -41,6 +42,7 @@ export default function DashboardFreelancer() {
   const [newCertTitle, setNewCertTitle] = useState('')
   const [certFileInput, setCertFileInput] = useState(null)
   const certFileRef = useRef(null)
+  const [notifications, setNotifications] = useState([])
 
 
   useEffect(() => {
@@ -112,6 +114,15 @@ export default function DashboardFreelancer() {
       (data) => setReviews(data)
     )
     return () => unsubReviews()
+  }, [currentUser])
+
+  useEffect(() => {
+    if (!currentUser) return
+    const unsubNotifs = notificationService.listenToNotifications(
+      currentUser.uid,
+      (data) => setNotifications(data)
+    )
+    return () => unsubNotifs()
   }, [currentUser])
 
 
@@ -244,6 +255,22 @@ export default function DashboardFreelancer() {
       alert(`Error: ${err.message}`)
     }
     setUploadingCert(false)
+  }
+
+  async function handleMarkAsRead(notifId) {
+    try {
+      await notificationService.markAsRead(notifId)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function handleMarkAllAsRead() {
+    try {
+      await notificationService.markAllAsRead(currentUser.uid)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   function handleRemoveCertFileInput() {
@@ -1154,6 +1181,98 @@ export default function DashboardFreelancer() {
             )}
           </div>
         )}
+        {/* Notifications Tab */}
+        {activeTab === 'notifications' && (
+          <div style={{ maxWidth: 700 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0 }}>Notifications</h2>
+              {notifications.some((n) => !n.isRead) && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: 'var(--primary)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontSize: 13,
+                    fontWeight: 600,
+                  }}
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
+
+            {notifications.length === 0 ? (
+              <div style={{
+                backgroundColor: 'white',
+                padding: 60,
+                borderRadius: 8,
+                textAlign: 'center',
+                color: 'var(--gray-600)',
+                boxShadow: 'var(--shadow-sm)',
+              }}>
+                <p style={{ fontSize: 40, margin: '0 0 12px 0' }}>🔔</p>
+                <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>No notifications yet</p>
+                <p style={{ fontSize: 14, margin: 0 }}>We'll notify you about certifications, applications, and more</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {notifications.map((notif) => (
+                  <div
+                    key={notif.id}
+                    onClick={() => !notif.isRead && handleMarkAsRead(notif.id)}
+                    style={{
+                      backgroundColor: notif.isRead ? 'white' : 'var(--primary-light)',
+                      padding: '16px 20px',
+                      borderRadius: 8,
+                      boxShadow: 'var(--shadow-sm)',
+                      border: `1px solid ${notif.isRead ? 'var(--gray-200)' : 'var(--primary)'}`,
+                      cursor: notif.isRead ? 'default' : 'pointer',
+                      display: 'flex',
+                      gap: 14,
+                      alignItems: 'flex-start',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <div style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>
+                      {notif.type === 'certification_verified' && '✅'}
+                      {notif.type === 'certification_rejected' && '❌'}
+                      {notif.type === 'application_accepted' && '🎉'}
+                      {notif.type === 'application_declined' && '📋'}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: 'var(--gray-900)' }}>
+                          {notif.title}
+                        </p>
+                        <span style={{ fontSize: 12, color: 'var(--gray-500)', whiteSpace: 'nowrap', marginLeft: 12 }}>
+                          {new Date(notif.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-700)', lineHeight: 1.5 }}>
+                        {notif.message}
+                      </p>
+                    </div>
+                    {!notif.isRead && (
+                      <div style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: 'var(--primary)',
+                        marginTop: 6,
+                        flexShrink: 0,
+                      }} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
     </div>
   )

@@ -113,7 +113,7 @@ export const jobService = {
       job_id: jobId,
       freelancer_id: freelancerId,
       message,
-      applied_at: new Date().toISOString(),
+      applied_at: Date.now(),
     })
     if (error) throw error
   },

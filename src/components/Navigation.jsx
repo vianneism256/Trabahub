@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthProvider'
 import { supabase } from '../supabase.js'
 import { conversationService } from '../services/conversationService'
+import { notificationService } from '../services/notificationService'
 
 export default function Navigation() {
   const { currentUser, logout } = useAuth()
@@ -10,6 +11,7 @@ export default function Navigation() {
   const location = useLocation()
   const [userRole, setUserRole] = useState(null)
   const [messageBadge, setMessageBadge] = useState(0)
+  const [notifBadge, setNotifBadge] = useState(0)
 
   useEffect(() => {
     if (location.state?.role) {
@@ -50,6 +52,15 @@ export default function Navigation() {
     }
 
     return () => unsubscribe?.()
+  }, [currentUser, userRole])
+
+  useEffect(() => {
+    if (!currentUser || userRole !== 'freelancer') return
+    const unsubscribe = notificationService.listenToNotifications(
+      currentUser.uid,
+      (notifs) => setNotifBadge(notifs.filter((n) => !n.isRead).length)
+    )
+    return () => unsubscribe()
   }, [currentUser, userRole])
 
   async function loadUserRole() {
@@ -230,7 +241,7 @@ export default function Navigation() {
           >
             My Jobs
           </button>
-          <BadgeTab label="Messages" tabName="messages" route="/customer" />
+          <BadgeTab label="Messages" tabName="messages" route="/customer" badge={messageBadge} />
           
 <button
             onClick={() => navigate('/customer', { state: { activeTab: 'my-profile' } })}
@@ -295,7 +306,8 @@ export default function Navigation() {
           >
             My Applications
           </button>
-          <BadgeTab label="Messages" tabName="messages" route="/freelancer" />
+          <BadgeTab label="Messages" tabName="messages" route="/freelancer" badge={messageBadge} />
+          <BadgeTab label="Notifications" tabName="notifications" route="/freelancer" badge={notifBadge} />
           <button
             onClick={() => navigate('/freelancer', { state: { activeTab: 'my-profile' } })}
             style={{
@@ -317,7 +329,7 @@ export default function Navigation() {
     </div>
   )
 
-  function BadgeTab({ label, tabName, route }) {
+  function BadgeTab({ label, tabName, route, badge = 0 }) {
     const isActive = location.state?.activeTab === tabName
     return (
       <button
@@ -339,7 +351,7 @@ export default function Navigation() {
         }}
       >
         {label}
-        {messageBadge > 0 && (
+        {badge > 0 && (
           <span style={{
             backgroundColor: 'var(--danger)',
             color: 'white',
@@ -353,7 +365,7 @@ export default function Navigation() {
             justifyContent: 'center',
             padding: '0 4px',
           }}>
-            {messageBadge}
+            {badge}
           </span>
         )}
       </button>
