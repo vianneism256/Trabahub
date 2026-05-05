@@ -96,6 +96,7 @@ const fileInputRef = useRef(null)
 
   useEffect(() => {
     if (!selectedConversation) return
+    conversationService.markRead(selectedConversation.id, 'customer').catch(console.error)
     const unsubscribe = conversationService.listenToMessages(
       selectedConversation.id,
       (msgs) => setMessages(msgs)

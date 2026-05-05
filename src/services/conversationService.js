@@ -17,6 +17,8 @@ function mapConversationRow(row) {
     status: row.status,
     lastMessage: row.last_message,
     lastMessageAt: row.last_message_at,
+    freelancerLastReadAt: row.freelancer_last_read_at || null,
+    customerLastReadAt: row.customer_last_read_at || null,
     createdAt: row.created_at,
   }
 }
@@ -143,6 +145,15 @@ export const conversationService = {
       .subscribe()
 
     return () => supabase.removeChannel(channel)
+  },
+
+  async markRead(conversationId, role) {
+    const column = role === 'freelancer' ? 'freelancer_last_read_at' : 'customer_last_read_at'
+    const { error } = await supabase
+      .from('conversations')
+      .update({ [column]: Date.now() })
+      .eq('id', conversationId)
+    if (error) throw error
   },
 
   async updateStatus(conversationId, status) {

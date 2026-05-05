@@ -99,7 +99,7 @@ export default function DashboardFreelancer() {
 
   useEffect(() => {
     if (!selectedConversation) return
-    // Real-time listener — unsubscribes when conversation changes
+    conversationService.markRead(selectedConversation.id, 'freelancer').catch(console.error)
     const unsubscribe = conversationService.listenToMessages(
       selectedConversation.id,
       (msgs) => setMessages(msgs)

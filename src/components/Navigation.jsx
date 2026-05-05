@@ -37,7 +37,11 @@ export default function Navigation() {
       unsubscribe = conversationService.listenToFreelancerConversations(
         currentUser.uid,
         (convs) => {
-          const count = convs.filter((c) => c.status === 'accepted').length
+          const count = convs.filter((c) => {
+            if (!c.lastMessageAt) return false
+            if (!c.freelancerLastReadAt) return true
+            return c.lastMessageAt > c.freelancerLastReadAt
+          }).length
           setMessageBadge(count)
         }
       )
@@ -45,7 +49,11 @@ export default function Navigation() {
       unsubscribe = conversationService.listenToCustomerConversations(
         currentUser.uid,
         (convs) => {
-          const count = convs.filter((c) => c.status === 'pending').length
+          const count = convs.filter((c) => {
+            if (!c.lastMessageAt) return false
+            if (!c.customerLastReadAt) return true
+            return c.lastMessageAt > c.customerLastReadAt
+          }).length
           setMessageBadge(count)
         }
       )
