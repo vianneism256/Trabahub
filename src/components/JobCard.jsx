@@ -4,19 +4,25 @@ import { conversationService } from '../services/conversationService'
 import { freelancerService } from '../services/freelancerService'
 import { customerService } from '../services/customerService'
 
-export default function JobCard({ job, currentUserId, onApply, userCategories = [], applicationStatus = null }) {
+export default function JobCard({ job, currentUserId, onApply, userCategories = [], applicationStatus = null, connectBalance = null, onDeductConnects = null }) {
   const [showApplyForm, setShowApplyForm] = useState(false)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [applied, setApplied] = useState(job.applications?.some((a) => a.freelancerId === currentUserId))
+  const APPLY_COST = 6
 
 async function handleApply() {
     if (!message.trim()) {
       alert('Please enter a message')
       return
     }
+    if (connectBalance !== null && connectBalance < APPLY_COST) {
+      alert(`You need ${APPLY_COST} connects to apply. You currently have ${connectBalance} connects. Buy more in the Buy Connects tab.`)
+      return
+    }
     setLoading(true)
     try {
+      if (onDeductConnects) await onDeductConnects(APPLY_COST)
       await jobService.applyForJob(job.id, currentUserId, message)
       const [freelancerProfile, customerProfile] = await Promise.all([
         freelancerService.getProfile(currentUserId),
@@ -199,19 +205,31 @@ async function handleWithdraw() {
                 Skills Don't Match
               </button>
             ) : !showApplyForm ? (
-              <button onClick={() => setShowApplyForm(true)} style={{
-                width: '100%',
-                padding: '12px 16px',
-                backgroundColor: 'var(--primary)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 6,
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontSize: 14,
-                transition: 'all 0.2s',
-              }} onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--primary-dark)'} onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--primary)'}>
-                Apply Now
+              <button
+                onClick={() => setShowApplyForm(true)}
+                disabled={connectBalance !== null && connectBalance < APPLY_COST}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  backgroundColor: (connectBalance !== null && connectBalance < APPLY_COST) ? 'var(--gray-300)' : 'var(--primary)',
+                  color: (connectBalance !== null && connectBalance < APPLY_COST) ? 'var(--gray-500)' : 'white',
+                  border: 'none',
+                  borderRadius: 6,
+                  fontWeight: 700,
+                  cursor: (connectBalance !== null && connectBalance < APPLY_COST) ? 'not-allowed' : 'pointer',
+                  fontSize: 14,
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                {connectBalance !== null && connectBalance < APPLY_COST ? (
+                  `Not Enough Connects (need ${APPLY_COST})`
+                ) : (
+                  <>Apply Now {connectBalance !== null && <span style={{ fontSize: 12, opacity: 0.85 }}>— {APPLY_COST} Connects</span>}</>
+                )}
               </button>
             ) : (
               <div style={{

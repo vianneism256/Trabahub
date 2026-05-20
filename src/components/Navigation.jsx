@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthProvider'
 import { supabase } from '../supabase.js'
 import { conversationService } from '../services/conversationService'
 import { notificationService } from '../services/notificationService'
+import { connectService } from '../services/connectService'
 
 export default function Navigation() {
   const { currentUser, logout } = useAuth()
@@ -12,6 +13,8 @@ export default function Navigation() {
   const [userRole, setUserRole] = useState(null)
   const [messageBadge, setMessageBadge] = useState(0)
   const [notifBadge, setNotifBadge] = useState(0)
+  const [customerNotifBadge, setCustomerNotifBadge] = useState(0)
+  const [connects, setConnects] = useState(null)
 
   useEffect(() => {
     if (location.state?.role) {
@@ -69,6 +72,30 @@ export default function Navigation() {
       (notifs) => setNotifBadge(notifs.filter((n) => !n.isRead).length)
     )
     return () => unsubscribe()
+  }, [currentUser, userRole])
+
+  useEffect(() => {
+    if (!currentUser || userRole !== 'customer') return
+    const unsubscribe = notificationService.listenToNotifications(
+      currentUser.uid,
+      (notifs) => setCustomerNotifBadge(notifs.filter((n) => !n.isRead).length)
+    )
+    return () => unsubscribe()
+  }, [currentUser, userRole])
+
+  useEffect(() => {
+    if (!currentUser || !userRole || userRole === 'admin') return
+    connectService.getBalance(currentUser.uid, userRole).then(setConnects).catch(console.error)
+
+    const table = userRole === 'freelancer' ? 'freelancers' : 'customers'
+    const channel = supabase
+      .channel(`connects-nav-${currentUser.uid}`)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table, filter: `firebase_uid=eq.${currentUser.uid}` },
+        (payload) => { if (payload.new?.connects !== undefined) setConnects(payload.new.connects) }
+      )
+      .subscribe()
+    return () => supabase.removeChannel(channel)
   }, [currentUser, userRole])
 
   async function loadUserRole() {
@@ -159,6 +186,28 @@ export default function Navigation() {
                   </div>
                 </div>
               </div>
+              {connects !== null && (
+                <div
+                  onClick={() => {
+                    const route = userRole === 'freelancer' ? '/freelancer' : '/customer'
+                    navigate(route, { state: { activeTab: 'buy-connects' } })
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '6px 14px',
+                    backgroundColor: connects < 6 ? '#fef2f2' : '#f0fdf4',
+                    border: `1px solid ${connects < 6 ? '#fca5a5' : '#86efac'}`,
+                    borderRadius: 20,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>💰</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: connects < 6 ? '#dc2626' : '#15803d' }}>{connects}</span>
+                  <span style={{ fontSize: 11, color: connects < 6 ? '#ef4444' : '#166534', fontWeight: 600 }}>connects</span>
+                </div>
+              )}
               <button
                 onClick={handleLogout}
                 className="btn-secondary"
@@ -250,8 +299,24 @@ export default function Navigation() {
             My Jobs
           </button>
           <BadgeTab label="Messages" tabName="messages" route="/customer" badge={messageBadge} />
-          
-<button
+          <BadgeTab label="Notifications" tabName="notifications" route="/customer" badge={customerNotifBadge} />
+          <button
+            onClick={() => navigate('/customer', { state: { activeTab: 'buy-connects' } })}
+            style={{
+              padding: '12px 20px',
+              backgroundColor: location.state?.activeTab === 'buy-connects' ? 'var(--primary)' : 'transparent',
+              color: location.state?.activeTab === 'buy-connects' ? 'white' : 'var(--gray-700)',
+              border: 'none',
+              borderRadius: '6px 6px 0 0',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: 14,
+              transition: 'all 0.2s',
+            }}
+          >
+            Buy Connects
+          </button>
+          <button
             onClick={() => navigate('/customer', { state: { activeTab: 'my-profile' } })}
             style={{
               padding: '12px 20px',
@@ -316,6 +381,22 @@ export default function Navigation() {
           </button>
           <BadgeTab label="Messages" tabName="messages" route="/freelancer" badge={messageBadge} />
           <BadgeTab label="Notifications" tabName="notifications" route="/freelancer" badge={notifBadge} />
+          <button
+            onClick={() => navigate('/freelancer', { state: { activeTab: 'buy-connects' } })}
+            style={{
+              padding: '12px 20px',
+              backgroundColor: location.state?.activeTab === 'buy-connects' ? 'var(--primary)' : 'transparent',
+              color: location.state?.activeTab === 'buy-connects' ? 'white' : 'var(--gray-700)',
+              border: 'none',
+              borderRadius: '6px 6px 0 0',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: 14,
+              transition: 'all 0.2s',
+            }}
+          >
+            Buy Connects
+          </button>
           <button
             onClick={() => navigate('/freelancer', { state: { activeTab: 'my-profile' } })}
             style={{

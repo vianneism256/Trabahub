@@ -10,6 +10,7 @@ import { reviewService } from '../services/reviewService'
 import StarRating from '../components/StarRating'
 import { notificationService } from '../services/notificationService'
 import { kycService } from '../services/kycService'
+import { connectService } from '../services/connectService'
 
 export default function DashboardFreelancer() {
   const { currentUser } = useAuth()
@@ -50,6 +51,12 @@ export default function DashboardFreelancer() {
   const fileInputRef = useRef(null)
   const [uploadingKyc, setUploadingKyc] = useState(false)
   const kycFileRef = useRef(null)
+  const [connects, setConnects] = useState(null)
+  const [selectedPackage, setSelectedPackage] = useState(null)
+  const [receiptFile, setReceiptFile] = useState(null)
+  const [submittingPurchase, setSubmittingPurchase] = useState(false)
+  const [purchaseSuccess, setPurchaseSuccess] = useState(false)
+  const receiptFileRef = useRef(null)
 
 
   useEffect(() => {
@@ -92,6 +99,9 @@ export default function DashboardFreelancer() {
       const certs = await certificationService.getCertificationsByFreelancer(currentUser.uid)
       setCertifications(certs)
       setVerifiedCategories(certs.filter(c => c.status === 'verified').map(c => c.title))
+      // Load connect balance
+      const bal = await connectService.getBalance(currentUser.uid, 'freelancer')
+      setConnects(bal)
     } catch (err) {
       console.error(err)
     }
@@ -334,6 +344,26 @@ export default function DashboardFreelancer() {
     if (certFileRef.current) certFileRef.current.value = ''
   }
 
+  async function handleDeductConnects(amount) {
+    const newBalance = await connectService.deductConnects(currentUser.uid, 'freelancer', amount)
+    setConnects(newBalance)
+  }
+
+  async function handleSubmitPurchase() {
+    if (!selectedPackage || !receiptFile) return
+    setSubmittingPurchase(true)
+    try {
+      await connectService.submitPurchase(currentUser.uid, 'freelancer', selectedPackage.connects, selectedPackage.price, receiptFile)
+      setPurchaseSuccess(true)
+      setSelectedPackage(null)
+      setReceiptFile(null)
+      if (receiptFileRef.current) receiptFileRef.current.value = ''
+    } catch (err) {
+      alert(`Error: ${err.message}`)
+    }
+    setSubmittingPurchase(false)
+  }
+
   async function handleKycUpload(e) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -502,6 +532,8 @@ export default function DashboardFreelancer() {
                         currentUserId={currentUser.uid}
                         userCategories={verifiedCategories}
                         onApply={() => {}}
+                        connectBalance={connects}
+                        onDeductConnects={handleDeductConnects}
                       />
                     ))}
                   </div>
@@ -1503,6 +1535,140 @@ export default function DashboardFreelancer() {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Buy Connects Tab */}
+        {activeTab === 'buy-connects' && (
+          <div style={{ maxWidth: 760 }}>
+            {/* Balance header */}
+            <div style={{ backgroundColor: 'white', padding: 24, borderRadius: 8, boxShadow: 'var(--shadow-sm)', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ fontSize: 13, color: 'var(--gray-500)', margin: '0 0 4px 0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Connect Balance</p>
+                <p style={{ fontSize: 36, fontWeight: 800, color: 'var(--gray-900)', margin: 0 }}>{connects ?? '—'} <span style={{ fontSize: 18, fontWeight: 500, color: 'var(--gray-600)' }}>connects</span></p>
+              </div>
+              <div style={{ fontSize: 48 }}>💰</div>
+            </div>
+
+            {purchaseSuccess && (
+              <div style={{ backgroundColor: 'var(--success-light)', border: '1.5px solid var(--success)', borderRadius: 8, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: 24 }}>✅</span>
+                <div>
+                  <p style={{ margin: 0, fontWeight: 700, color: 'var(--success)', fontSize: 15 }}>Receipt submitted successfully!</p>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-600)' }}>Admin will verify your payment. Connects will be added once approved.</p>
+                </div>
+                <button onClick={() => setPurchaseSuccess(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: 'var(--gray-400)' }}>✕</button>
+              </div>
+            )}
+
+            <div style={{ marginBottom: 24 }}>
+              <h3 style={{ margin: '0 0 6px 0' }}>Choose a Package</h3>
+              <p style={{ margin: '0 0 20px 0', fontSize: 14, color: 'var(--gray-600)' }}>
+                Applying to a job costs <strong>6 connects</strong>. Connects never expire.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 14 }}>
+                {connectService.PACKAGES.map((pkg) => (
+                  <div
+                    key={pkg.id}
+                    onClick={() => { setSelectedPackage(pkg); setPurchaseSuccess(false) }}
+                    style={{
+                      padding: 20,
+                      borderRadius: 10,
+                      border: `2px solid ${selectedPackage?.id === pkg.id ? 'var(--primary)' : 'var(--gray-200)'}`,
+                      backgroundColor: selectedPackage?.id === pkg.id ? 'var(--primary-light)' : 'white',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      position: 'relative',
+                      transition: 'all 0.15s',
+                      boxShadow: selectedPackage?.id === pkg.id ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+                    }}
+                  >
+                    {pkg.popular && (
+                      <span style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', backgroundColor: 'var(--primary)', color: 'white', fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 10, whiteSpace: 'nowrap' }}>
+                        MOST POPULAR
+                      </span>
+                    )}
+                    <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-500)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>{pkg.label}</p>
+                    <p style={{ fontSize: 32, fontWeight: 800, color: 'var(--gray-900)', margin: '0 0 4px 0' }}>{pkg.connects}</p>
+                    <p style={{ fontSize: 12, color: 'var(--gray-500)', margin: '0 0 12px 0' }}>connects</p>
+                    <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--primary)', margin: 0 }}>₱{pkg.price}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {selectedPackage && (
+              <div style={{ backgroundColor: 'white', padding: 28, borderRadius: 8, boxShadow: 'var(--shadow-sm)', border: '1.5px solid var(--primary-light)' }}>
+                <h4 style={{ margin: '0 0 20px 0', fontSize: 16 }}>Pay via GCash — ₱{selectedPackage.price}</h4>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+                  <div style={{ padding: 20, backgroundColor: 'var(--gray-50)', borderRadius: 8, border: '1px solid var(--gray-200)' }}>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>GCash Number</p>
+                    <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--gray-900)', margin: '0 0 4px 0', letterSpacing: '0.05em' }}>
+                      {/* TODO: Replace with your real GCash number */}
+                      0917-XXX-XXXX
+                    </p>
+                    <p style={{ fontSize: 11, color: 'var(--gray-500)', margin: 0 }}>Account Name: Trabahub</p>
+                  </div>
+                  <div style={{ padding: 12, backgroundColor: 'var(--gray-50)', borderRadius: 8, border: '1px solid var(--gray-200)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img src="/gcash-qr.png" alt="GCash QR Code" style={{ width: '100%', maxWidth: 160, display: 'block', borderRadius: 6 }} />
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid var(--gray-200)', paddingTop: 20 }}>
+                  <p style={{ fontWeight: 600, fontSize: 14, margin: '0 0 12px 0' }}>Upload your payment receipt</p>
+                  <p style={{ fontSize: 13, color: 'var(--gray-600)', margin: '0 0 16px 0' }}>
+                    After sending ₱{selectedPackage.price} via GCash, take a screenshot of the confirmation and upload it here.
+                  </p>
+                  <input
+                    ref={receiptFileRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                    style={{ display: 'none' }}
+                  />
+                  {receiptFile ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', backgroundColor: 'var(--success-light)', border: '1.5px solid var(--success)', borderRadius: 8, marginBottom: 16 }}>
+                      <span style={{ fontSize: 18 }}>🖼️</span>
+                      <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'var(--success)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{receiptFile.name}</span>
+                      <button onClick={() => { setReceiptFile(null); if (receiptFileRef.current) receiptFileRef.current.value = '' }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontWeight: 700, fontSize: 14 }}>✕</button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => receiptFileRef.current?.click()}
+                      style={{ padding: '12px 24px', backgroundColor: 'white', color: 'var(--gray-700)', border: '1.5px dashed var(--gray-300)', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14, marginBottom: 16 }}
+                    >
+                      📎 Choose Receipt Screenshot
+                    </button>
+                  )}
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <button
+                      onClick={handleSubmitPurchase}
+                      disabled={!receiptFile || submittingPurchase}
+                      style={{
+                        flex: 1,
+                        padding: '14px 24px',
+                        backgroundColor: receiptFile ? 'var(--primary)' : 'var(--gray-300)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 8,
+                        fontWeight: 700,
+                        fontSize: 15,
+                        cursor: receiptFile ? 'pointer' : 'not-allowed',
+                      }}
+                    >
+                      {submittingPurchase ? 'Submitting...' : `Submit Receipt — ${selectedPackage.connects} Connects for ₱${selectedPackage.price}`}
+                    </button>
+                    <button
+                      onClick={() => { setSelectedPackage(null); setReceiptFile(null); if (receiptFileRef.current) receiptFileRef.current.value = '' }}
+                      style={{ padding: '14px 20px', backgroundColor: 'var(--gray-100)', color: 'var(--gray-700)', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 14 }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
