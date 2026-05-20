@@ -111,26 +111,25 @@ export default function SignUp() {
           </select>
         </div>
         
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={agreedToTerms}
-              onChange={(e) => setAgreedToTerms(e.target.checked)}
-              style={{ marginTop: 3, flexShrink: 0, cursor: 'pointer' }}
-            />
-            <span style={{ fontSize: 13, color: '#555', lineHeight: 1.5 }}>
-              I have read and agree to the{' '}
-              <Link
-                to="/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#007bff', fontWeight: 600 }}
-              >
-                Terms and Conditions
-              </Link>
-              . I understand that Trabahub connects customers with independent freelancers and is not responsible for services rendered.
-            </span>
+        <div style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <input
+            id="terms-checkbox"
+            type="checkbox"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            style={{ marginTop: 3, flexShrink: 0, cursor: 'pointer' }}
+          />
+          <label htmlFor="terms-checkbox" style={{ fontSize: 13, color: '#555', lineHeight: 1.5, cursor: 'pointer', margin: 0, fontWeight: 'normal' }}>
+            I have read and agree to the{' '}
+            <Link
+              to="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#007bff', fontWeight: 600 }}
+            >
+              Terms and Conditions
+            </Link>
+            . I understand that Trabahub connects customers with independent freelancers and is not responsible for services rendered.
           </label>
         </div>
 
