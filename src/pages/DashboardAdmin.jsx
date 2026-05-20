@@ -3,16 +3,20 @@ import { supabase } from '../supabase.js'
 import { freelancerService } from '../services/freelancerService'
 import { jobService } from '../services/jobService'
 import { certificationService } from '../services/certificationService'
+import { kycService } from '../services/kycService'
 
 export default function DashboardAdmin() {
   const [freelancers, setFreelancers] = useState([])
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState('freelancers')
+  const [activeTab, setActiveTab] = useState('kyc')
   const [jobs, setJobs] = useState([])
   const [editLogs, setEditLogs] = useState([])
   const [selectedLogId, setSelectedLogId] = useState(null)
   const [rejectionReason, setRejectionReason] = useState('')
+  const [kycSubmissions, setKycSubmissions] = useState([])
+  const [kycSelectedId, setKycSelectedId] = useState(null)
+  const [kycRejectionReason, setKycRejectionReason] = useState('')
 
 useEffect(() => {
     setLoading(true)
@@ -46,8 +50,13 @@ useEffect(() => {
       setEditLogs(logs)
     })
 
+    const unsubKyc = kycService.listenToPendingKyc((submissions) => {
+      setKycSubmissions(submissions)
+    })
+
     return () => {
       unsubEditLogs()
+      unsubKyc()
     }
   }, [])
 
@@ -59,6 +68,33 @@ useEffect(() => {
       )
     } catch (err) {
       console.error(err)
+    }
+  }
+
+  async function handleVerifyKyc(uid, role) {
+    try {
+      await kycService.verifyKyc(uid, role)
+      setKycSubmissions(prev => prev.filter(s => s.uid !== uid))
+      setKycSelectedId(null)
+      alert('✓ Identity verified successfully!')
+    } catch (err) {
+      alert(`Error: ${err.message}`)
+    }
+  }
+
+  async function handleRejectKyc(uid, role) {
+    if (!kycRejectionReason.trim()) {
+      alert('Please provide a rejection reason')
+      return
+    }
+    try {
+      await kycService.rejectKyc(uid, role, kycRejectionReason)
+      setKycSubmissions(prev => prev.filter(s => s.uid !== uid))
+      setKycSelectedId(null)
+      setKycRejectionReason('')
+      alert('❌ Identity verification rejected')
+    } catch (err) {
+      alert(`Error: ${err.message}`)
     }
   }
 
@@ -202,6 +238,42 @@ useEffect(() => {
           borderBottom: '1px solid var(--gray-300)',
         }}>
           <button
+            onClick={() => setActiveTab('kyc')}
+            style={{
+              padding: '12px 20px',
+              backgroundColor: activeTab === 'kyc' ? 'var(--primary)' : 'transparent',
+              color: activeTab === 'kyc' ? 'white' : 'var(--gray-700)',
+              border: 'none',
+              borderRadius: '6px 6px 0 0',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: 14,
+              transition: 'all 0.2s',
+              position: 'relative',
+            }}
+          >
+            KYC Verification
+            {kycSubmissions.length > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: -8,
+                right: 8,
+                backgroundColor: 'var(--danger)',
+                color: 'white',
+                borderRadius: '50%',
+                width: 20,
+                height: 20,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 12,
+                fontWeight: 700,
+              }}>
+                {kycSubmissions.length}
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setActiveTab('freelancers')}
             style={{
               padding: '12px 20px',
@@ -272,6 +344,111 @@ useEffect(() => {
         </div>
 
         {loading && <div style={{ textAlign: 'center', padding: 40, color: 'var(--gray-600)' }}>Loading...</div>}
+
+        {/* KYC Verification Tab */}
+        {activeTab === 'kyc' && !loading && (
+          <div>
+            {kycSubmissions.length === 0 ? (
+              <div style={{ backgroundColor: 'white', padding: 40, borderRadius: 8, textAlign: 'center', color: 'var(--gray-600)' }}>
+                <p style={{ fontSize: 40, margin: '0 0 12px 0' }}>✅</p>
+                <p style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>No pending KYC submissions</p>
+                <p style={{ fontSize: 13, color: 'var(--gray-500)', margin: 0 }}>All submitted IDs have been reviewed</p>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gap: 16 }}>
+                {kycSubmissions.map((sub) => (
+                  <div key={sub.uid} style={{
+                    backgroundColor: 'white',
+                    borderRadius: 8,
+                    boxShadow: 'var(--shadow-sm)',
+                    border: '2px solid var(--primary-light)',
+                    overflow: 'hidden',
+                  }}>
+                    <div style={{ padding: 24 }}>
+                      {/* Header */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid var(--gray-200)' }}>
+                        <div style={{ width: 60, height: 60, borderRadius: '50%', backgroundColor: 'var(--gray-200)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, overflow: 'hidden' }}>
+                          {sub.photoUrl ? (
+                            <img src={sub.photoUrl} alt={sub.firstName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : '👤'}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                            <p style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>
+                              {[sub.firstName, sub.lastName].filter(Boolean).join(' ') || 'Unknown'}
+                            </p>
+                            <span style={{
+                              padding: '2px 10px',
+                              borderRadius: 20,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              backgroundColor: sub.role === 'freelancer' ? 'var(--primary-light)' : 'var(--gray-200)',
+                              color: sub.role === 'freelancer' ? 'var(--primary)' : 'var(--gray-700)',
+                              textTransform: 'capitalize',
+                            }}>
+                              {sub.role}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: 13, color: 'var(--gray-600)', margin: 0 }}>{sub.email}</p>
+                        </div>
+                      </div>
+
+                      {/* ID Image */}
+                      <div style={{ marginBottom: 20 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-700)', marginBottom: 10 }}>🪪 Submitted Government ID</p>
+                        <div style={{ borderRadius: 8, overflow: 'hidden', maxWidth: 360, border: '1px solid var(--gray-200)' }}>
+                          <img src={sub.idImageUrl} alt="Government ID" style={{ width: '100%', maxHeight: 280, objectFit: 'cover', display: 'block' }} />
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      {kycSelectedId !== sub.uid ? (
+                        <button
+                          onClick={() => setKycSelectedId(sub.uid)}
+                          style={{ padding: '12px 24px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 14 }}
+                        >
+                          Review
+                        </button>
+                      ) : (
+                        <div style={{ padding: 16, backgroundColor: 'var(--gray-50)', borderRadius: 8, borderTop: '2px solid var(--primary)', marginTop: 12 }}>
+                          <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: 'var(--gray-700)' }}>What would you like to do?</p>
+                          <div style={{ display: 'grid', gap: 12 }}>
+                            <textarea
+                              value={kycRejectionReason}
+                              onChange={(e) => setKycRejectionReason(e.target.value)}
+                              placeholder="If rejecting, explain why (optional for approval)..."
+                              style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--gray-300)', borderRadius: 6, fontFamily: 'inherit', fontSize: 13, minHeight: 80, boxSizing: 'border-box' }}
+                            />
+                            <div style={{ display: 'flex', gap: 12 }}>
+                              <button
+                                onClick={() => handleVerifyKyc(sub.uid, sub.role)}
+                                style={{ flex: 1, padding: '12px 16px', backgroundColor: 'var(--success)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}
+                              >
+                                ✓ Verify Identity
+                              </button>
+                              <button
+                                onClick={() => handleRejectKyc(sub.uid, sub.role)}
+                                style={{ flex: 1, padding: '12px 16px', backgroundColor: 'var(--danger)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}
+                              >
+                                ❌ Reject
+                              </button>
+                              <button
+                                onClick={() => { setKycSelectedId(null); setKycRejectionReason('') }}
+                                style={{ flex: 1, padding: '12px 16px', backgroundColor: 'var(--gray-300)', color: 'var(--gray-700)', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {activeTab === 'freelancers' && !loading && (
           <div>

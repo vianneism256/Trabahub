@@ -9,6 +9,7 @@ import JobCard from '../components/JobCard'
 import { reviewService } from '../services/reviewService'
 import StarRating from '../components/StarRating'
 import { notificationService } from '../services/notificationService'
+import { kycService } from '../services/kycService'
 
 export default function DashboardFreelancer() {
   const { currentUser } = useAuth()
@@ -47,6 +48,8 @@ export default function DashboardFreelancer() {
   const [notifications, setNotifications] = useState([])
   const [selectedFile, setSelectedFile] = useState(null)
   const fileInputRef = useRef(null)
+  const [uploadingKyc, setUploadingKyc] = useState(false)
+  const kycFileRef = useRef(null)
 
 
   useEffect(() => {
@@ -331,6 +334,29 @@ export default function DashboardFreelancer() {
     if (certFileRef.current) certFileRef.current.value = ''
   }
 
+  async function handleKycUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image must be under 10MB')
+      return
+    }
+    setUploadingKyc(true)
+    try {
+      const imageUrl = await kycService.uploadIdImage(currentUser.uid, 'freelancer', file)
+      await kycService.submitIdVerification(currentUser.uid, 'freelancer', imageUrl)
+      setProfile(prev => ({ ...prev, idImageUrl: imageUrl, idVerificationStatus: 'pending' }))
+    } catch (err) {
+      alert(`Error: ${err.message}`)
+    }
+    setUploadingKyc(false)
+    if (kycFileRef.current) kycFileRef.current.value = ''
+  }
+
   const jobsFinished = conversations.filter((conv) => conv.status === 'closed').length
   const reviewCount = profile.totalReviews ?? reviews.length
 
@@ -368,7 +394,37 @@ export default function DashboardFreelancer() {
         {/* Jobs Feed Tab */}
         {activeTab === 'jobs-feed' && (
           <div>
-            {verifiedCategories.length === 0 ? (
+            {profile.idVerificationStatus !== 'verified' ? (
+              <div style={{ backgroundColor: 'white', padding: 48, borderRadius: 8, boxShadow: 'var(--shadow-sm)', textAlign: 'center', maxWidth: 560, margin: '0 auto' }}>
+                {profile.idVerificationStatus === 'pending' ? (
+                  <>
+                    <p style={{ fontSize: 40, margin: '0 0 16px 0' }}>🕐</p>
+                    <p style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: 'var(--gray-900)' }}>ID Under Review</p>
+                    <p style={{ fontSize: 14, color: 'var(--gray-600)', margin: 0 }}>Your government ID is being reviewed by our team. You'll be notified once it's approved.</p>
+                  </>
+                ) : (
+                  <>
+                    <p style={{ fontSize: 40, margin: '0 0 16px 0' }}>🪪</p>
+                    <p style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: 'var(--gray-900)' }}>
+                      {profile.idVerificationStatus === 'rejected' ? 'ID Verification Failed' : 'Verify Your Identity First'}
+                    </p>
+                    <p style={{ fontSize: 14, color: 'var(--gray-600)', marginBottom: 24 }}>
+                      {profile.idVerificationStatus === 'rejected'
+                        ? 'Your ID was not accepted. Please upload a clearer photo of your government-issued ID.'
+                        : 'Upload a valid government-issued ID (driver\'s license, passport, or national ID) to access job listings.'}
+                    </p>
+                    <input ref={kycFileRef} type="file" accept="image/*" onChange={handleKycUpload} style={{ display: 'none' }} />
+                    <button
+                      onClick={() => kycFileRef.current?.click()}
+                      disabled={uploadingKyc}
+                      style={{ padding: '12px 28px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+                    >
+                      {uploadingKyc ? 'Uploading...' : profile.idVerificationStatus === 'rejected' ? 'Re-upload ID' : 'Upload Government ID'}
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : verifiedCategories.length === 0 ? (
               <div style={{
                 backgroundColor: 'white',
                 padding: 60,
@@ -455,7 +511,6 @@ export default function DashboardFreelancer() {
           </div>
         )}
 
-        {/* My Applications Tab */}
         {activeTab === 'my-applications' && (
           <div>
             {jobs.filter((j) => myApplications.includes(j.id)).length === 0 ? (
@@ -1115,6 +1170,52 @@ export default function DashboardFreelancer() {
                         </label>
                       ))}
                     </div>
+                  </div>
+
+                  {/* Government ID Section */}
+                  <div>
+                    <label style={{ fontWeight: 600, marginBottom: 12, display: 'block' }}>
+                      Government ID
+                      <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--gray-500)', marginLeft: 8 }}>
+                        (Required for KYC verification)
+                      </span>
+                    </label>
+                    {profile.idVerificationStatus === 'verified' ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', backgroundColor: 'var(--success-light)', border: '1.5px solid var(--success)', borderRadius: 8 }}>
+                        <span style={{ fontSize: 20 }}>✅</span>
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: 'var(--success)' }}>Identity Verified</p>
+                          <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-600)' }}>Your government ID has been approved</p>
+                        </div>
+                      </div>
+                    ) : profile.idVerificationStatus === 'pending' ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', backgroundColor: '#fffbeb', border: '1.5px solid #fcd34d', borderRadius: 8 }}>
+                        <span style={{ fontSize: 20 }}>🕐</span>
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#92400e' }}>Under Review</p>
+                          <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-600)' }}>Your ID is being reviewed by our team</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ padding: 16, backgroundColor: 'var(--gray-50)', borderRadius: 8, border: '2px dashed var(--gray-300)' }}>
+                        {profile.idVerificationStatus === 'rejected' && (
+                          <p style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600, marginBottom: 12 }}>
+                            ❌ Your previous ID was rejected. Please upload a clearer image.
+                          </p>
+                        )}
+                        <p style={{ fontSize: 12, color: 'var(--gray-600)', marginBottom: 12 }}>
+                          Upload a clear photo of your driver's license, passport, or any government-issued ID.
+                        </p>
+                        <input ref={kycFileRef} type="file" accept="image/*" onChange={handleKycUpload} style={{ display: 'none' }} />
+                        <button
+                          onClick={() => kycFileRef.current?.click()}
+                          disabled={uploadingKyc}
+                          style={{ padding: '10px 20px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+                        >
+                          {uploadingKyc ? 'Uploading...' : '🪪 Upload Government ID'}
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Certifications Section */}

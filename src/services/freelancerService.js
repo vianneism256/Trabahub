@@ -18,6 +18,8 @@ function mapFreelancerRow(row) {
     verified: row.verified,
     updatedAt: row.updated_at,
     categories: row.freelancer_categories?.map((cat) => cat.category) || [],
+    idImageUrl: row.id_image_url || null,
+    idVerificationStatus: row.id_verification_status || null,
   }
 }
 

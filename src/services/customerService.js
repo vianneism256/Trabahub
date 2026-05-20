@@ -31,6 +31,8 @@ export const customerService = {
       email: data.email || '',
       phone: data.phone || '',
       photoURL: data.photo_url || null,
+      idImageUrl: data.id_image_url || null,
+      idVerificationStatus: data.id_verification_status || null,
     }
   },
 

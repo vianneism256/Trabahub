@@ -7,6 +7,7 @@ import { conversationService } from '../services/conversationService'
 import { reviewService } from '../services/reviewService'
 import StarRating from '../components/StarRating'
 import { customerService } from '../services/customerService'
+import { kycService } from '../services/kycService'
 
 
 export default function DashboardCustomer() {
@@ -56,6 +57,8 @@ const [profileLoading, setProfileLoading] = useState(false)
 const [selectedFile, setSelectedFile] = useState(null)
 const [uploadingFile, setUploadingFile] = useState(false)
 const fileInputRef = useRef(null)
+const [uploadingKyc, setUploadingKyc] = useState(false)
+const kycFileRef = useRef(null)
 
   
   useEffect(() => {
@@ -116,6 +119,29 @@ const fileInputRef = useRef(null)
     } catch (err) {
       console.error(err)
     }
+  }
+
+  async function handleKycUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image must be under 10MB')
+      return
+    }
+    setUploadingKyc(true)
+    try {
+      const imageUrl = await kycService.uploadIdImage(currentUser.uid, 'customer', file)
+      await kycService.submitIdVerification(currentUser.uid, 'customer', imageUrl)
+      setCustomerProfile(prev => ({ ...prev, idImageUrl: imageUrl, idVerificationStatus: 'pending' }))
+    } catch (err) {
+      alert(`Error: ${err.message}`)
+    }
+    setUploadingKyc(false)
+    if (kycFileRef.current) kycFileRef.current.value = ''
   }
 
 
@@ -385,7 +411,37 @@ async function handleAccept(conversationId) {
         <div style={{ flex: 1, minWidth: 0 }}>
         {/* Post Job Tab */}
         {activeTab === 'post-job' && (
-          <div style={{
+          customerProfile.idVerificationStatus !== 'verified' ? (
+          <div style={{ backgroundColor: 'white', padding: 48, borderRadius: 8, boxShadow: 'var(--shadow-sm)', textAlign: 'center', maxWidth: 560 }}>
+            {customerProfile.idVerificationStatus === 'pending' ? (
+              <>
+                <p style={{ fontSize: 40, margin: '0 0 16px 0' }}>🕐</p>
+                <p style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: 'var(--gray-900)' }}>ID Under Review</p>
+                <p style={{ fontSize: 14, color: 'var(--gray-600)', margin: 0 }}>Your government ID is being reviewed. You'll be able to post jobs once it's approved.</p>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: 40, margin: '0 0 16px 0' }}>🪪</p>
+                <p style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: 'var(--gray-900)' }}>
+                  {customerProfile.idVerificationStatus === 'rejected' ? 'ID Verification Failed' : 'Verify Your Identity to Post Jobs'}
+                </p>
+                <p style={{ fontSize: 14, color: 'var(--gray-600)', marginBottom: 24 }}>
+                  {customerProfile.idVerificationStatus === 'rejected'
+                    ? 'Your ID was not accepted. Please upload a clearer photo of your government-issued ID.'
+                    : 'Upload a valid government-issued ID to start posting jobs and hiring freelancers.'}
+                </p>
+                <input ref={kycFileRef} type="file" accept="image/*" onChange={handleKycUpload} style={{ display: 'none' }} />
+                <button
+                  onClick={() => kycFileRef.current?.click()}
+                  disabled={uploadingKyc}
+                  style={{ padding: '12px 28px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+                >
+                  {uploadingKyc ? 'Uploading...' : customerProfile.idVerificationStatus === 'rejected' ? 'Re-upload ID' : 'Upload Government ID'}
+                </button>
+              </>
+            )}
+          </div>
+          ) : <div style={{
             backgroundColor: 'white',
             padding: 32,
             borderRadius: 8,
@@ -499,6 +555,7 @@ async function handleAccept(conversationId) {
         )}
 
         {/* My Jobs Tab */}
+
         {activeTab === 'my-jobs' && (
           <div>
             {customerJobs.length === 0 ? (
@@ -1433,6 +1490,40 @@ async function handleAccept(conversationId) {
                   <div>
                     <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Phone (optional)</label>
                     <input type="tel" name="phone" value={customerProfile.phone} onChange={handleProfileChange} placeholder="(555) 123-4567" />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: 600, marginBottom: 12, display: 'block' }}>
+                      Government ID
+                      <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--gray-500)', marginLeft: 8 }}>(Required for KYC)</span>
+                    </label>
+                    {customerProfile.idVerificationStatus === 'verified' ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', backgroundColor: 'var(--success-light)', border: '1.5px solid var(--success)', borderRadius: 8 }}>
+                        <span style={{ fontSize: 20 }}>✅</span>
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: 'var(--success)' }}>Identity Verified</p>
+                          <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-600)' }}>Your government ID has been approved</p>
+                        </div>
+                      </div>
+                    ) : customerProfile.idVerificationStatus === 'pending' ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', backgroundColor: '#fffbeb', border: '1.5px solid #fcd34d', borderRadius: 8 }}>
+                        <span style={{ fontSize: 20 }}>🕐</span>
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#92400e' }}>Under Review</p>
+                          <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-600)' }}>Your ID is being reviewed by our team</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ padding: 16, backgroundColor: 'var(--gray-50)', borderRadius: 8, border: '2px dashed var(--gray-300)' }}>
+                        {customerProfile.idVerificationStatus === 'rejected' && (
+                          <p style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600, marginBottom: 12 }}>❌ Your previous ID was rejected. Please upload a clearer image.</p>
+                        )}
+                        <p style={{ fontSize: 12, color: 'var(--gray-600)', marginBottom: 12 }}>Upload a clear photo of your driver's license, passport, or any government-issued ID.</p>
+                        <input ref={kycFileRef} type="file" accept="image/*" onChange={handleKycUpload} style={{ display: 'none' }} />
+                        <button onClick={() => kycFileRef.current?.click()} disabled={uploadingKyc} style={{ padding: '10px 20px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                          {uploadingKyc ? 'Uploading...' : '🪪 Upload Government ID'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div style={{ display: 'flex', gap: 12 }}>
                     <button onClick={handleSaveProfile} disabled={profileLoading} style={{ flex: 1, padding: '14px 24px', backgroundColor: 'var(--success)', color: 'white', border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
