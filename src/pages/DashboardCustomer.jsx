@@ -634,17 +634,22 @@ async function handleAccept(conversationId) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                       <div>
                         <h3 style={{ marginBottom: 4 }}>{job.title}</h3>
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '4px 12px',
-                          borderRadius: 20,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          backgroundColor: job.status === 'closed' ? 'var(--gray-200)' : 'var(--success-light)',
-                          color: job.status === 'closed' ? 'var(--gray-700)' : 'var(--success)',
-                        }}>
-                          {job.status === 'closed' ? 'Closed' : 'Open'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '4px 12px',
+                            borderRadius: 20,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            backgroundColor: job.status === 'closed' ? 'var(--gray-200)' : 'var(--success-light)',
+                            color: job.status === 'closed' ? 'var(--gray-700)' : 'var(--success)',
+                          }}>
+                            {job.status === 'closed' ? 'Closed' : 'Open'}
+                          </span>
+                          <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>
+                            Posted {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        </div>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button onClick={() => handleViewApplicants(job.id)} style={{
