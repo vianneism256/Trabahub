@@ -17,7 +17,8 @@ export default function DashboardFreelancer() {
   const activeTab = location.state?.activeTab || 'jobs-feed'
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [profile, setProfile] = useState({
-    displayName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     bio: '',
@@ -214,8 +215,8 @@ export default function DashboardFreelancer() {
     setLoading(true)
     setMessage('')
     try {
-      if (!profile.displayName || profile.categories.length === 0) {
-        setMessage('Please fill in at least your name and select at least one category')
+      if (!profile.firstName || !profile.lastName || profile.categories.length === 0) {
+        setMessage('Please fill in your first name, last name, and select at least one category')
         setLoading(false)
         return
       }
@@ -898,7 +899,7 @@ export default function DashboardFreelancer() {
                       Name
                     </p>
                     <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--gray-900)', margin: 0 }}>
-                      {profile.displayName || '—'}
+                      {[profile.firstName, profile.lastName].filter(Boolean).join(' ') || '—'}
                     </p>
                   </div>
 
@@ -1022,15 +1023,27 @@ export default function DashboardFreelancer() {
                 )}
 
                 <div style={{ display: 'grid', gap: 24 }}>
-                  <div>
-                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Display Name</label>
-                    <input
-                      type="text"
-                      name="displayName"
-                      value={profile.displayName}
-                      onChange={handleProfileChange}
-                      placeholder="Your name"
-                    />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div>
+                      <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>First Name</label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={profile.firstName}
+                        onChange={handleProfileChange}
+                        placeholder="Juan"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Last Name</label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={profile.lastName}
+                        onChange={handleProfileChange}
+                        placeholder="dela Cruz"
+                      />
+                    </div>
                   </div>
 
                   <div>

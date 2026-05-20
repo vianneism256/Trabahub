@@ -44,7 +44,8 @@ export default function DashboardCustomer() {
   const [assigningConvId, setAssigningConvId] = useState(null)
   const [confirmText, setConfirmText] = useState('')
   const [customerProfile, setCustomerProfile] = useState({
-  displayName: '',
+  firstName: '',
+  lastName: '',
   email: '',
   phone: '',
 })
@@ -284,8 +285,8 @@ async function handleAccept(conversationId) {
     setProfileLoading(true)
     setProfileMessage('')
     try {
-      if (!customerProfile.displayName) {
-        setProfileMessage('Please enter your name')
+      if (!customerProfile.firstName || !customerProfile.lastName) {
+        setProfileMessage('Please enter your first and last name')
         setProfileLoading(false)
         return
       }
@@ -812,7 +813,7 @@ async function handleAccept(conversationId) {
               }}>
                 {freelancers
                   .filter((f) => 
-                    f.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    [f.firstName, f.lastName].filter(Boolean).join(' ').toLowerCase().includes(searchQuery.toLowerCase()) ||
                     f.bio?.toLowerCase().includes(searchQuery.toLowerCase())
                   )
                   .map((freelancer) => (
@@ -842,7 +843,7 @@ async function handleAccept(conversationId) {
                             {freelancer.photoURL ? (
                               <img
                                 src={freelancer.photoURL}
-                                alt={freelancer.displayName}
+                                alt={[freelancer.firstName, freelancer.lastName].filter(Boolean).join(' ')}
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                               />
                             ) : (
@@ -851,7 +852,7 @@ async function handleAccept(conversationId) {
                           </div>
                           <div>
                             <h3 style={{ margin: 0, marginBottom: 4 }}>
-                              {freelancer.displayName || 'Professional'}
+                              {[freelancer.firstName, freelancer.lastName].filter(Boolean).join(' ') || 'Professional'}
                             </h3>
                           <span style={{
                             display: 'inline-block',
@@ -999,11 +1000,11 @@ async function handleAccept(conversationId) {
                   fontSize: 32,
                 }}>
                   {viewingFreelancer.photoURL ? (
-                    <img src={viewingFreelancer.photoURL} alt={viewingFreelancer.displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={viewingFreelancer.photoURL} alt={[viewingFreelancer.firstName, viewingFreelancer.lastName].filter(Boolean).join(' ')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : '👤'}
                 </div>
                 <div>
-                  <h2 style={{ margin: 0, fontSize: 24 }}>{viewingFreelancer.displayName || 'Freelancer'}</h2>
+                  <h2 style={{ margin: 0, fontSize: 24 }}>{[viewingFreelancer.firstName, viewingFreelancer.lastName].filter(Boolean).join(' ') || 'Freelancer'}</h2>
                   <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--gray-600)' }}>{viewingFreelancer.categories?.join(', ') || 'No specialties listed'}</p>
                 </div>
               </div>
@@ -1392,7 +1393,7 @@ async function handleAccept(conversationId) {
                   </div>
                   <div>
                     <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Name</p>
-                    <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--gray-900)', margin: 0 }}>{customerProfile.displayName || '—'}</p>
+                    <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--gray-900)', margin: 0 }}>{[customerProfile.firstName, customerProfile.lastName].filter(Boolean).join(' ') || '—'}</p>
                   </div>
                   <div>
                     <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Email</p>
@@ -1415,9 +1416,15 @@ async function handleAccept(conversationId) {
                   </div>
                 )}
                 <div style={{ display: 'grid', gap: 24 }}>
-                  <div>
-                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Display Name</label>
-                    <input type="text" name="displayName" value={customerProfile.displayName} onChange={handleProfileChange} placeholder="Your name" />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div>
+                      <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>First Name</label>
+                      <input type="text" name="firstName" value={customerProfile.firstName} onChange={handleProfileChange} placeholder="Juan" />
+                    </div>
+                    <div>
+                      <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Last Name</label>
+                      <input type="text" name="lastName" value={customerProfile.lastName} onChange={handleProfileChange} placeholder="dela Cruz" />
+                    </div>
                   </div>
                   <div>
                     <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>Email</label>

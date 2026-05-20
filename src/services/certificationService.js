@@ -83,7 +83,7 @@ export const certificationService = {
 
         const { data: freelancer, error: freelancerError } = await supabase
           .from('freelancers')
-          .select('display_name, email, photo_url')
+          .select('first_name, last_name, email, photo_url')
           .eq('firebase_uid', cert.freelancer_id)
           .maybeSingle()
         if (freelancerError) throw freelancerError
@@ -97,7 +97,7 @@ export const certificationService = {
             certificationTitle: cert.title,
             certificationImage: cert.image_url,
           },
-          freelancerName: freelancer?.display_name || 'Unknown',
+          freelancerName: freelancer ? [freelancer.first_name, freelancer.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown',
           freelancerEmail: freelancer?.email || 'N/A',
           freelancerPhoto: freelancer?.photo_url || null,
           createdAt: logData?.created_at || cert.submitted_at,

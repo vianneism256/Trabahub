@@ -20,7 +20,6 @@ async function handleSubmit(e) {
       {
         firebase_uid: currentUser.uid,
         role,
-        display_name: currentUser.displayName || currentUser.email,
         email: currentUser.email,
       },
       { onConflict: 'firebase_uid' }

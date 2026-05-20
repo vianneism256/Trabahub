@@ -7,7 +7,8 @@ const CATEGORIES = ['Plumbing', 'Electrician', 'Carpenter', 'Cleaning', 'Paintin
 function mapFreelancerRow(row) {
   return {
     uid: row.firebase_uid,
-    displayName: row.display_name,
+    firstName: row.first_name || '',
+    lastName: row.last_name || '',
     email: row.email,
     bio: row.bio,
     phone: row.phone,
@@ -26,7 +27,8 @@ export const freelancerService = {
   async saveProfile(uid, data) {
     const { error } = await supabase.from('freelancers').upsert({
       firebase_uid: uid,
-      display_name: data.displayName,
+      first_name: data.firstName || null,
+      last_name: data.lastName || null,
       email: data.email,
       phone: data.phone || null,
       bio: data.bio || null,

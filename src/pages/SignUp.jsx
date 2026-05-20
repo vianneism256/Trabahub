@@ -6,7 +6,8 @@ import { supabase } from '../supabase.js'
 export default function SignUp() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [displayName, setDisplayName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [role, setRole] = useState('customer')
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -41,14 +42,20 @@ export default function SignUp() {
     setError('')
     try {
       const user = await signup(email, password)
-      // Save user to Supabase immediately with role
       const { error: dbError } = await supabase.from('users').upsert({
         firebase_uid: user.uid,
         email: user.email,
-        display_name: displayName || email,
         role,
       }, { onConflict: 'firebase_uid' })
       if (dbError) throw dbError
+      const profileTable = role === 'freelancer' ? 'freelancers' : 'customers'
+      const { error: profileError } = await supabase.from(profileTable).upsert({
+        firebase_uid: user.uid,
+        email: user.email,
+        first_name: firstName.trim() || null,
+        last_name: lastName.trim() || null,
+      }, { onConflict: 'firebase_uid' })
+      if (profileError) throw profileError
       if (role === 'freelancer') navigate('/freelancer')
       else navigate('/customer')
     } catch (err) {
@@ -72,8 +79,13 @@ export default function SignUp() {
       
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: 15 }}>
-          <label><strong>Display name</strong></label>
-          <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" />
+          <label><strong>First Name</strong></label>
+          <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Juan" required />
+        </div>
+
+        <div style={{ marginBottom: 15 }}>
+          <label><strong>Last Name</strong></label>
+          <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="dela Cruz" required />
         </div>
         
         <div style={{ marginBottom: 15 }}>

@@ -30,7 +30,6 @@ useEffect(() => {
         setUsers(userRows.map((user) => ({
           ...user,
           uid: user.firebase_uid,
-          displayName: user.display_name,
           createdAt: user.created_at,
         })))
         setJobs(jobRows)
@@ -298,7 +297,7 @@ useEffect(() => {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 16 }}>
                       <div>
-                        <h3 style={{ marginBottom: 8 }}>{freelancer.displayName || 'Unnamed'}</h3>
+                        <h3 style={{ marginBottom: 8 }}>{[freelancer.firstName, freelancer.lastName].filter(Boolean).join(' ') || 'Unnamed'}</h3>
                         <span style={{
                           display: 'inline-block',
                           padding: '6px 12px',
@@ -379,7 +378,6 @@ useEffect(() => {
                   <thead>
                     <tr style={{ backgroundColor: 'var(--gray-50)' }}>
                       <th>Email</th>
-                      <th>Display Name</th>
                       <th>Role</th>
                       <th>Joined</th>
                     </tr>
@@ -388,7 +386,6 @@ useEffect(() => {
                     {users.map((user) => (
                       <tr key={user.uid}>
                         <td style={{ fontWeight: 500 }}>{user.email}</td>
-                        <td>{user.displayName || '-'}</td>
                         <td>
                           <span style={{
                             padding: '4px 12px',

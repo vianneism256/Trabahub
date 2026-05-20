@@ -26,10 +26,10 @@ async function handleApply() {
         job.id,
         job.title,
         currentUserId,
-        freelancerProfile?.displayName || 'Freelancer',
+        [freelancerProfile?.firstName, freelancerProfile?.lastName].filter(Boolean).join(' ') || 'Freelancer',
         freelancerProfile?.photoURL || null,
         job.customerId,
-        customerProfile?.displayName || 'Customer',
+        [customerProfile?.firstName, customerProfile?.lastName].filter(Boolean).join(' ') || 'Customer',
         customerProfile?.photoURL || null,
         message
       )

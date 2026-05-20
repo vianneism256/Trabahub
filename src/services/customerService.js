@@ -6,7 +6,8 @@ export const customerService = {
   async saveProfile(uid, data) {
     const payload = {
       firebase_uid: uid,
-      display_name: data.displayName,
+      first_name: data.firstName || null,
+      last_name: data.lastName || null,
       email: data.email,
       phone: data.phone || null,
       photo_url: data.photoURL || null,
@@ -25,7 +26,8 @@ export const customerService = {
     if (error) throw error
     if (!data) return null
     return {
-      displayName: data.display_name || '',
+      firstName: data.first_name || '',
+      lastName: data.last_name || '',
       email: data.email || '',
       phone: data.phone || '',
       photoURL: data.photo_url || null,
