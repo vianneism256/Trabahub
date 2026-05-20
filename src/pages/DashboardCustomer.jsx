@@ -17,6 +17,8 @@ export default function DashboardCustomer() {
   const [selectedCategory, setSelectedCategory] = useState('')
   const [freelancers, setFreelancers] = useState([])
   const [customerJobs, setCustomerJobs] = useState([])
+  const [jobStatusFilter, setJobStatusFilter] = useState('all')
+  const [jobSortOrder, setJobSortOrder] = useState('newest')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -518,9 +520,110 @@ async function handleAccept(conversationId) {
                   Post your first job
                 </button>
               </div>
-            ) : (
-              <div style={{ display: 'grid', gap: 16 }}>
-                {customerJobs.map((job) => (
+            ) : (() => {
+              const displayedJobs = customerJobs
+                .filter((j) => jobStatusFilter === 'all' || j.status === jobStatusFilter)
+                .sort((a, b) => {
+                  const tA = new Date(a.createdAt).getTime()
+                  const tB = new Date(b.createdAt).getTime()
+                  return jobSortOrder === 'newest' ? tB - tA : tA - tB
+                })
+              return (
+              <>
+                {/* Filter + Sort bar */}
+                <div style={{
+                  backgroundColor: 'white',
+                  padding: '16px 20px',
+                  borderRadius: 8,
+                  boxShadow: 'var(--shadow-sm)',
+                  marginBottom: 20,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  flexWrap: 'wrap',
+                }}>
+                  {/* Status pills */}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {[['all', 'All'], ['open', 'Open'], ['closed', 'Closed']].map(([val, label]) => (
+                      <button
+                        key={val}
+                        onClick={() => setJobStatusFilter(val)}
+                        style={{
+                          padding: '6px 16px',
+                          borderRadius: 20,
+                          border: '1.5px solid',
+                          borderColor: jobStatusFilter === val ? 'var(--primary)' : 'var(--gray-300)',
+                          backgroundColor: jobStatusFilter === val ? 'var(--primary)' : 'white',
+                          color: jobStatusFilter === val ? 'white' : 'var(--gray-600)',
+                          fontWeight: 600,
+                          fontSize: 13,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {label}
+                        {val !== 'all' && (
+                          <span style={{
+                            marginLeft: 6,
+                            backgroundColor: jobStatusFilter === val ? 'rgba(255,255,255,0.25)' : 'var(--gray-100)',
+                            color: jobStatusFilter === val ? 'white' : 'var(--gray-500)',
+                            borderRadius: 10,
+                            padding: '1px 7px',
+                            fontSize: 11,
+                          }}>
+                            {customerJobs.filter((j) => j.status === val).length}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Divider */}
+                  <div style={{ width: 1, height: 24, backgroundColor: 'var(--gray-200)' }} />
+
+                  {/* Sort */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 13, color: 'var(--gray-500)', fontWeight: 600 }}>Sort:</span>
+                    <select
+                      value={jobSortOrder}
+                      onChange={(e) => setJobSortOrder(e.target.value)}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: 6,
+                        border: '1.5px solid var(--gray-300)',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: 'var(--gray-700)',
+                        backgroundColor: 'white',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="newest">Newest First</option>
+                      <option value="oldest">Oldest First</option>
+                    </select>
+                  </div>
+
+                  {/* Count */}
+                  <div style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--gray-500)', fontWeight: 600 }}>
+                    {displayedJobs.length} of {customerJobs.length} job{customerJobs.length !== 1 ? 's' : ''}
+                  </div>
+                </div>
+
+                {displayedJobs.length === 0 ? (
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: 40,
+                    borderRadius: 8,
+                    textAlign: 'center',
+                    color: 'var(--gray-600)',
+                    boxShadow: 'var(--shadow-sm)',
+                  }}>
+                    <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>No {jobStatusFilter} jobs</p>
+                    <p style={{ fontSize: 13, margin: 0 }}>Try a different filter</p>
+                  </div>
+                ) : (
+                <div style={{ display: 'grid', gap: 16 }}>
+                {displayedJobs.map((job) => (
                   <div key={job.id} style={{
                     backgroundColor: 'white',
                     padding: 24,
@@ -608,8 +711,11 @@ async function handleAccept(conversationId) {
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
+                </div>
+                )}
+              </>
+              )
+            })()}
           </div>
         )}
 
