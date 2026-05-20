@@ -117,7 +117,7 @@ export default function SignUp() {
             type="checkbox"
             checked={agreedToTerms}
             onChange={(e) => setAgreedToTerms(e.target.checked)}
-            style={{ marginTop: 3, flexShrink: 0, cursor: 'pointer' }}
+            style={{ width: 'auto', marginTop: 3, flexShrink: 0, cursor: 'pointer' }}
           />
           <label htmlFor="terms-checkbox" style={{ fontSize: 13, color: '#555', lineHeight: 1.5, cursor: 'pointer', margin: 0, fontWeight: 'normal' }}>
             I have read and agree to the{' '}
