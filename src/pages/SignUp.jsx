@@ -9,6 +9,7 @@ export default function SignUp() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [role, setRole] = useState('customer')
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { signup, signInWithGoogle, currentUser } = useAuth()
@@ -40,6 +41,10 @@ export default function SignUp() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+    if (!agreedToTerms) {
+      setError('You must agree to the Terms and Conditions to create an account.')
+      return
+    }
     try {
       const user = await signup(email, password)
       const { error: dbError } = await supabase.from('users').upsert({
@@ -106,7 +111,44 @@ export default function SignUp() {
           </select>
         </div>
         
-        <button type="submit" style={{ width: '100%', padding: '12px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: 4, fontSize: 16, fontWeight: 'bold' }}>
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              style={{ marginTop: 3, flexShrink: 0, cursor: 'pointer' }}
+            />
+            <span style={{ fontSize: 13, color: '#555', lineHeight: 1.5 }}>
+              I have read and agree to the{' '}
+              <Link
+                to="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#007bff', fontWeight: 600 }}
+              >
+                Terms and Conditions
+              </Link>
+              . I understand that Trabahub connects customers with independent freelancers and is not responsible for services rendered.
+            </span>
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          disabled={!agreedToTerms}
+          style={{
+            width: '100%',
+            padding: '12px',
+            backgroundColor: agreedToTerms ? '#28a745' : '#aaa',
+            color: 'white',
+            border: 'none',
+            borderRadius: 4,
+            fontSize: 16,
+            fontWeight: 'bold',
+            cursor: agreedToTerms ? 'pointer' : 'not-allowed',
+          }}
+        >
           Create Account
         </button>
       </form>

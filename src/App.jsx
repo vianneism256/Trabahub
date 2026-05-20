@@ -8,6 +8,7 @@ import SelectRole from './pages/SelectRole'
 import DashboardCustomer from './pages/DashboardCustomer'
 import DashboardFreelancer from './pages/DashboardFreelancer'
 import DashboardAdmin from './pages/DashboardAdmin'
+import Terms from './pages/Terms'
 
 function App() {
   return (
@@ -95,6 +96,7 @@ function App() {
           <Route path="/customer" element={<DashboardCustomer />} />
           <Route path="/freelancer" element={<DashboardFreelancer />} />
           <Route path="/admin" element={<DashboardAdmin />} />
+          <Route path="/terms" element={<Terms />} />
         </Routes>
       </div>
 
