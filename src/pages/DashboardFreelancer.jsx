@@ -38,8 +38,9 @@ export default function DashboardFreelancer() {
   const [reviews, setReviews] = useState([])
   const [photoUploading, setPhotoUploading] = useState(false)
   const [certifications, setCertifications] = useState([])
+  const [verifiedCategories, setVerifiedCategories] = useState([])
   const [uploadingCert, setUploadingCert] = useState(false)
-  const [newCertTitle, setNewCertTitle] = useState('')
+  const [newCertCategory, setNewCertCategory] = useState('')
   const [certFileInput, setCertFileInput] = useState(null)
   const certFileRef = useRef(null)
   const [notifications, setNotifications] = useState([])
@@ -75,7 +76,7 @@ export default function DashboardFreelancer() {
 
   useEffect(() => {
     filterJobs()
-  }, [jobs, selectedCategory, profile])
+  }, [jobs, selectedCategory, verifiedCategories])
 
   async function loadProfile() {
     try {
@@ -86,6 +87,7 @@ export default function DashboardFreelancer() {
       // Load certifications
       const certs = await certificationService.getCertificationsByFreelancer(currentUser.uid)
       setCertifications(certs)
+      setVerifiedCategories(certs.filter(c => c.status === 'verified').map(c => c.title))
     } catch (err) {
       console.error(err)
     }
@@ -130,7 +132,9 @@ export default function DashboardFreelancer() {
 
 
   function filterJobs() {
-    let filtered = jobs
+    let filtered = jobs.filter((job) =>
+      job.categories.some((c) => verifiedCategories.includes(c))
+    )
     if (selectedCategory) {
       filtered = filtered.filter((job) => job.categories.includes(selectedCategory))
     }
@@ -264,8 +268,16 @@ export default function DashboardFreelancer() {
   }
 
   async function handleAddCertification() {
-    if (!newCertTitle.trim() || !certFileInput) {
-      alert('Please enter a title and select an image')
+    if (!newCertCategory || !certFileInput) {
+      alert('Please select a category and choose an image')
+      return
+    }
+
+    const duplicate = certifications.some(
+      (c) => c.title === newCertCategory && (c.status === 'pending' || c.status === 'verified')
+    )
+    if (duplicate) {
+      alert(`You already have a ${newCertCategory} certification pending or verified.`)
       return
     }
 
@@ -277,16 +289,17 @@ export default function DashboardFreelancer() {
       )
 
       await certificationService.addCertification(currentUser.uid, {
-        title: newCertTitle,
+        title: newCertCategory,
         imageUrl: imageUrl,
       })
 
       // Reload certifications
       const certs = await certificationService.getCertificationsByFreelancer(currentUser.uid)
       setCertifications(certs)
+      setVerifiedCategories(certs.filter(c => c.status === 'verified').map(c => c.title))
 
       // Reset form
-      setNewCertTitle('')
+      setNewCertCategory('')
       setCertFileInput(null)
       if (certFileRef.current) certFileRef.current.value = ''
       alert('✓ Certification submitted for verification!')
@@ -354,78 +367,89 @@ export default function DashboardFreelancer() {
         {/* Jobs Feed Tab */}
         {activeTab === 'jobs-feed' && (
           <div>
-            {/* Filter */}
-            <div style={{
-              backgroundColor: 'white',
-              padding: 24,
-              borderRadius: 8,
-              boxShadow: 'var(--shadow-sm)',
-              marginBottom: 24,
-              display: 'flex',
-              alignItems: 'end',
-              gap: 16,
-            }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontWeight: 600, marginBottom: 8, display: 'block', fontSize: 14 }}>
-                  Filter by Category
-                </label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  style={{
-                    padding: '12px 16px',
-                    fontSize: 14,
-                    borderRadius: 6,
-                    border: '1px solid var(--gray-300)',
-                    width: '100%',
-                    maxWidth: 300,
-                  }}
-                >
-                  <option value="">All Categories</option>
-                  {profile.categories.length > 0 ? (
-                    profile.categories.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))
-                  ) : (
-                    freelancerService.CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))
-                  )}
-                </select>
-              </div>
-              <div style={{ fontSize: 14, color: 'var(--gray-600)', fontWeight: 600 }}>
-                {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''} available
-              </div>
-            </div>
-
-            {/* Jobs Grid */}
-            {filteredJobs.length === 0 ? (
+            {verifiedCategories.length === 0 ? (
               <div style={{
                 backgroundColor: 'white',
                 padding: 60,
                 borderRadius: 8,
                 textAlign: 'center',
                 color: 'var(--gray-600)',
+                boxShadow: 'var(--shadow-sm)',
               }}>
-                <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>No jobs available right now</p>
-                <p style={{ fontSize: 14 }}>Check back soon or complete your profile to see more relevant opportunities</p>
+                <p style={{ fontSize: 40, margin: '0 0 12px 0' }}>📋</p>
+                <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>No verified certifications yet</p>
+                <p style={{ fontSize: 14, margin: 0 }}>Upload a certification in your profile and wait for admin verification to unlock jobs in that category.</p>
               </div>
             ) : (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr',
-                gap: 20,
-              }}>
-                {filteredJobs.map((job) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    currentUserId={currentUser.uid}
-                    userCategories={profile.categories}
-                    onApply={() => {}}
-                  />
-                ))}
-              </div>
+              <>
+                {/* Filter */}
+                <div style={{
+                  backgroundColor: 'white',
+                  padding: 24,
+                  borderRadius: 8,
+                  boxShadow: 'var(--shadow-sm)',
+                  marginBottom: 24,
+                  display: 'flex',
+                  alignItems: 'end',
+                  gap: 16,
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block', fontSize: 14 }}>
+                      Filter by Category
+                    </label>
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      style={{
+                        padding: '12px 16px',
+                        fontSize: 14,
+                        borderRadius: 6,
+                        border: '1px solid var(--gray-300)',
+                        width: '100%',
+                        maxWidth: 300,
+                      }}
+                    >
+                      <option value="">All My Categories</option>
+                      {verifiedCategories.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ fontSize: 14, color: 'var(--gray-600)', fontWeight: 600 }}>
+                    {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''} available
+                  </div>
+                </div>
+
+                {/* Jobs Grid */}
+                {filteredJobs.length === 0 ? (
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: 60,
+                    borderRadius: 8,
+                    textAlign: 'center',
+                    color: 'var(--gray-600)',
+                  }}>
+                    <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>No jobs available right now</p>
+                    <p style={{ fontSize: 14 }}>Check back soon for new opportunities in your verified categories</p>
+                  </div>
+                ) : (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr',
+                    gap: 20,
+                  }}>
+                    {filteredJobs.map((job) => (
+                      <JobCard
+                        key={job.id}
+                        job={job}
+                        currentUserId={currentUser.uid}
+                        userCategories={verifiedCategories}
+                        onApply={() => {}}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -1175,11 +1199,9 @@ export default function DashboardFreelancer() {
 
                       <div style={{ display: 'grid', gap: 12 }}>
                         <div>
-                          <input
-                            type="text"
-                            value={newCertTitle}
-                            onChange={(e) => setNewCertTitle(e.target.value)}
-                            placeholder="e.g., AWS Certified Solutions Architect"
+                          <select
+                            value={newCertCategory}
+                            onChange={(e) => setNewCertCategory(e.target.value)}
                             style={{
                               width: '100%',
                               padding: '10px 12px',
@@ -1187,8 +1209,14 @@ export default function DashboardFreelancer() {
                               border: '1px solid var(--gray-300)',
                               fontSize: 13,
                               boxSizing: 'border-box',
+                              backgroundColor: 'white',
                             }}
-                          />
+                          >
+                            <option value="">Select a category...</option>
+                            {freelancerService.CATEGORIES.map((cat) => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
                         </div>
 
                         <div>
@@ -1219,15 +1247,15 @@ export default function DashboardFreelancer() {
 
                         <button
                           onClick={handleAddCertification}
-                          disabled={uploadingCert || !newCertTitle.trim() || !certFileInput}
+                          disabled={uploadingCert || !newCertCategory || !certFileInput}
                           style={{
                             width: '100%',
                             padding: '10px 12px',
-                            backgroundColor: newCertTitle.trim() && certFileInput ? 'var(--primary)' : 'var(--gray-300)',
+                            backgroundColor: newCertCategory && certFileInput ? 'var(--primary)' : 'var(--gray-300)',
                             color: 'white',
                             border: 'none',
                             borderRadius: 6,
-                            cursor: newCertTitle.trim() && certFileInput ? 'pointer' : 'default',
+                            cursor: newCertCategory && certFileInput ? 'pointer' : 'default',
                             fontSize: 13,
                             fontWeight: 600,
                           }}
