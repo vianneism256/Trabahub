@@ -1,0 +1,380 @@
+================================================================================
+  TRABAHUB — SOFTWARE WALKTHROUGH SCRIPT
+  Estimated Duration: 16–18 minutes
+  Presenters: VIANNE (Host / Admin), NASH (Freelancer), JUSTINE (Customer)
+================================================================================
+
+ROLES
+  VIANNE  — Host, narrator, and admin panel demo
+  NASH    — Freelancer account demo
+  JUSTINE — Customer account demo
+
+SETUP BEFORE STARTING
+  - Vianne is logged in as admin on one browser tab
+  - Nash has a freelancer account ready (KYC approved, 1 verified certification)
+  - Justine has a customer account ready (KYC approved)
+  - All three accounts have at least some connects in their balance
+  - Open the app on a large screen so the audience can see clearly
+  - Keep all tabs visible and organized before beginning
+
+================================================================================
+  SEGMENT 1 — INTRODUCTION (VIANNE)                               ~1.5 minutes
+================================================================================
+
+VIANNE:
+  "Hi everyone. Welcome to Trabahub — a Philippine home services marketplace
+  that connects customers who need skilled workers with verified freelancers
+  in categories like plumbing, electrical, carpentry, cleaning, painting,
+  HVAC, roofing, and landscaping.
+
+  Today we're going to walk you through the full platform — how to sign up,
+  get verified, post jobs, apply for jobs, and how our connect-based system
+  works. I'll be demoing the admin side, Nash will show you the freelancer
+  experience, and Justine will walk through the customer side."
+
+[SCREEN: Show the landing page / login screen of Trabahub]
+[Navigate to the Sign Up page by clicking "Sign Up" in the top right]
+
+
+================================================================================
+  SEGMENT 2 — SIGN UP FLOW (VIANNE)                               ~2 minutes
+================================================================================
+
+VIANNE:
+  "Let's start with how a new user signs up. When you land on Trabahub,
+  you'll see the Sign Up form. You fill in your first name, last name,
+  email address, and password."
+
+[SCREEN: Show the Sign Up page — /signup]
+[Point to the First Name, Last Name, Email, and Password fields]
+
+VIANNE:
+  "Here you choose whether you're signing up as a Customer — someone looking
+  to hire — or a Freelancer, someone offering services."
+
+[SCREEN: Point to the 'I'm signing up as' dropdown showing Customer / Freelancer options]
+
+VIANNE:
+  "Before you can create your account, you need to read and agree to our
+  Terms and Conditions. This checkbox must be checked — the button stays
+  disabled until you agree."
+
+[SCREEN: Point to the Terms and Conditions checkbox at the bottom of the form]
+[Click the checkbox to show the 'Create Account' button become active]
+
+VIANNE:
+  "You can also sign in with Google using the button below the form.
+  Once registered, you're taken directly to your dashboard."
+
+[SCREEN: Point to the 'Sign in with Google' button]
+[Do NOT actually create an account — just demonstrate the form visually]
+
+
+================================================================================
+  SEGMENT 3 — KYC VERIFICATION AND ADMIN APPROVAL (VIANNE)        ~3 minutes
+================================================================================
+
+VIANNE:
+  "Now, new users can't post jobs or apply for jobs right away. Trabahub
+  requires identity verification — what we call KYC, or Know Your Customer.
+  Every user, both freelancers and customers, must upload a valid
+  government-issued ID before they can use the platform fully."
+
+[SCREEN: Navigate to Nash's freelancer account on a second tab or demo the Profile tab]
+[Go to My Profile tab — click 'My Profile' in the top navigation]
+[Scroll down to the Government ID section]
+
+VIANNE:
+  "When a user hasn't been verified yet, they see this prompt to upload their
+  government ID — driver's license, passport, or national ID. Once uploaded,
+  it goes to the admin for review."
+
+[SCREEN: Show the dashed upload box and the 'Upload Government ID' button]
+
+VIANNE:
+  "Let me switch to the admin panel to show how that gets approved."
+
+[SCREEN: Switch to Vianne's admin tab — navigate to /admin]
+[The default tab should be 'KYC Verification' — if not, click it]
+
+VIANNE:
+  "Here in the admin dashboard, I can see all pending identity submissions.
+  Each card shows the user's name, their role — whether they're a freelancer
+  or a customer — their email, and a photo of their uploaded ID."
+
+[SCREEN: Point to one of the KYC submission cards, showing the ID image and user info]
+
+VIANNE:
+  "I can click Review to open the decision panel, add a note if I need to,
+  and either Verify or Reject their identity."
+
+[SCREEN: Click the 'Review' button on a submission card]
+[Show the Verify Identity and Reject buttons appearing]
+[Click 'Verify Identity' to approve it]
+
+VIANNE:
+  "Once approved, the user gets a notification and their account unlocks.
+  Freelancers can then submit certifications, and customers can post jobs."
+
+
+================================================================================
+  SEGMENT 4 — FREELANCER EXPERIENCE (NASH)                        ~5 minutes
+================================================================================
+
+NASH:
+  "Thanks Vianne. So I'm logged in as a verified freelancer. Let me walk
+  you through my dashboard."
+
+[SCREEN: Switch to Nash's freelancer account]
+[Navigate to 'My Profile' in the top navigation bar]
+
+NASH:
+  "This is my profile page. You can see my name, email, phone number,
+  the specialties I've selected, and my overall rating and review count
+  from past customers."
+
+[SCREEN: Show the profile view page — scroll to show stats, name, bio, specialties]
+
+NASH:
+  "To get verified in a category, I go to Edit Profile and scroll down to
+  the Certifications section."
+
+[SCREEN: Click 'Edit Profile' button]
+[Scroll down past the Government ID section to the Certifications section]
+
+NASH:
+  "I pick a category from the dropdown — say, Plumbing — then choose an
+  image of my certification or license, and submit it for admin verification.
+  Once the admin approves it, that category unlocks and I can see jobs in it."
+
+[SCREEN: Show the certification dropdown and image upload button]
+[Point to any existing verified certifications shown as green cards]
+
+NASH:
+  "Now let me show you the connect system. I'll click Buy Connects in the
+  navigation."
+
+[SCREEN: Click 'Buy Connects' in the top navigation tab bar]
+
+NASH:
+  "Connects are like bid tokens — every time I apply to a job it costs
+  6 connects. To get connects, I buy a package and pay via GCash.
+  We have four packages: Starter, Basic, Pro, and Power."
+
+[SCREEN: Point to the four package cards showing connects and prices in pesos]
+[Click the 'Basic' package card to select it]
+
+NASH:
+  "When I select a package, the GCash payment details appear — the number
+  to send money to and the QR code I can scan. After I send the payment,
+  I take a screenshot of the GCash confirmation and upload it here as my
+  receipt."
+
+[SCREEN: Show the GCash number, QR code, and the receipt upload area below]
+[Click 'Choose Receipt Screenshot' to show the file picker — then cancel without uploading]
+
+NASH:
+  "Once I submit the receipt, admin reviews it and adds the connects to
+  my balance — which you can see right here in the navigation bar."
+
+[SCREEN: Point to the green '💰 X connects' pill in the top navigation bar]
+
+NASH:
+  "Now let me go to Browse Jobs."
+
+[SCREEN: Click 'Browse Jobs' in the top navigation tab bar]
+
+NASH:
+  "This is the job feed. I can only see jobs in the categories I'm verified
+  in. I can filter by a specific category using this dropdown. Each card
+  shows the job title, description, budget, timeline, and the number of
+  applications it already has."
+
+[SCREEN: Show the jobs feed with the filter dropdown and job cards visible]
+[Point to one job card — highlight the job title, budget, and categories]
+
+NASH:
+  "When I find one I like, I click Apply Now. It shows me it costs 6 connects.
+  I write a short message to the client introducing myself, then hit Submit."
+
+[SCREEN: Click 'Apply Now' on a job card — show the '— 6 Connects' label on the button]
+[Show the message text area that appears]
+[Do NOT submit — just show the form, then click Cancel]
+
+
+================================================================================
+  SEGMENT 5 — CUSTOMER EXPERIENCE (JUSTINE)                       ~4 minutes
+================================================================================
+
+JUSTINE:
+  "Alright, my turn! I'm logged in as a verified customer. Let me show you
+  what I can do on Trabahub."
+
+[SCREEN: Switch to Justine's customer account]
+[The default tab should be 'Find Freelancers' — if not, click it in the navigation]
+
+JUSTINE:
+  "The first thing I see is Find Freelancers. I can pick a category from this
+  dropdown, and it loads all verified freelancers in that field."
+
+[SCREEN: Click the 'Select a Category' dropdown and choose 'Plumbing']
+[Wait for freelancer cards to load]
+
+JUSTINE:
+  "Each card shows the freelancer's name, their verified badge, star rating,
+  their bio, and a button to View their full profile or contact them."
+
+[SCREEN: Point to a freelancer card — highlight the verified badge, rating, categories]
+[Click 'View Profile' on one card to show the profile modal]
+
+JUSTINE:
+  "I can see their full profile here — rating, number of reviews, jobs
+  finished, bio, contact info. Great for picking the right person."
+
+[SCREEN: Show the profile modal — scroll through it briefly]
+[Click the X button to close the modal]
+
+JUSTINE:
+  "Now let me post a job. I'll click Post a Job in the navigation."
+
+[SCREEN: Click 'Post a Job' in the top navigation tab bar]
+
+JUSTINE:
+  "Posting a job costs 4 connects. You can see my balance up in the nav bar.
+  I fill in the job title, a description of what I need, an optional budget,
+  and a timeline."
+
+[SCREEN: Fill in the Job Title field with something like 'Fix leaking kitchen pipe']
+[Fill in the Description field briefly]
+[Point to the Budget and Timeline fields]
+
+JUSTINE:
+  "Then I select the categories I need — this determines which freelancers
+  can see and apply to my job."
+
+[SCREEN: Click one or two category checkboxes in the Required Skills section, e.g. Plumbing]
+
+JUSTINE:
+  "When I hit Post Job, 4 connects are deducted from my balance and the job
+  goes live immediately. Freelancers with verified certifications in those
+  categories will see it in their feed."
+
+[SCREEN: Click the green 'Post Job' button]
+[Show the success message that appears]
+
+JUSTINE:
+  "I can track all my jobs in My Jobs."
+
+[SCREEN: Click 'My Jobs' in the top navigation tab bar]
+
+JUSTINE:
+  "Each job card shows whether it's Open or Closed, the date it was posted,
+  the budget and timeline, and how many applications it has received.
+  I can filter by open or closed, and sort by newest or oldest."
+
+[SCREEN: Show the filter pills (All / Open / Closed) and the sort dropdown]
+[Click 'Open' filter to show only open jobs]
+
+JUSTINE:
+  "When I click View Applicants, it takes me to the Messages tab where I
+  can see all the freelancers who applied."
+
+[SCREEN: Click 'View Applicants' on one of the job cards]
+[The Messages tab opens showing conversation threads on the left panel]
+
+
+================================================================================
+  SEGMENT 6 — MESSAGING AND HIRING FLOW (NASH + JUSTINE)         ~2.5 minutes
+================================================================================
+
+JUSTINE:
+  "This is the Messages tab. On the left, I can see each freelancer who
+  applied, their name, the job they applied for, and the status of their
+  application."
+
+[SCREEN: Show the left panel of the Messages tab with conversation items]
+[Click on one conversation to open the chat on the right]
+
+JUSTINE:
+  "I can chat with the freelancer here, share files or photos, and once I've
+  decided, I click Assign Freelancer to hire them."
+
+[SCREEN: Show the chat window and the 'Assign Freelancer' button in the header]
+[Point to the message input box and the file attach button]
+
+NASH:
+  "And from my side, I can see the same conversation in my Messages tab.
+  When the customer assigns me, my application status changes to Accepted
+  and I get notified."
+
+[SCREEN: Switch to Nash's account and show the Messages tab]
+[Show the same conversation with the 'Accepted' status badge]
+
+JUSTINE:
+  "After the job is done, I can leave a star rating and written review for
+  the freelancer directly from the conversation."
+
+[SCREEN: Switch back to Justine's account, show the 'Leave a Review' button in the chat]
+[Click it to show the star rating interface]
+[Do NOT submit — just show the stars and text area, then click Cancel]
+
+
+================================================================================
+  SEGMENT 7 — NOTIFICATIONS AND CONNECT APPROVALS (VIANNE)        ~1.5 minutes
+================================================================================
+
+VIANNE:
+  "Let me quickly show the notifications. Both freelancers and customers
+  receive notifications for key events — KYC approvals, certification
+  results, and connect purchase confirmations."
+
+[SCREEN: Switch to Nash's freelancer account]
+[Click 'Notifications' in the top navigation tab bar]
+
+VIANNE:
+  "Here Nash can see all notifications — when a certification is verified or
+  rejected, when a job application is accepted or declined, and when a
+  connect purchase is approved. Unread ones are highlighted in blue."
+
+[SCREEN: Show the notifications list — point to unread (blue) vs read (white) items]
+
+VIANNE:
+  "On the admin side, when a connect purchase receipt is submitted, it shows
+  up in the Connect Purchases tab with a red badge."
+
+[SCREEN: Switch to Vianne's admin tab]
+[Click the 'Connect Purchases' tab in the admin dashboard]
+
+VIANNE:
+  "Admin can see the receipt image, the package amount, and the price paid.
+  One click to approve — and the connects are instantly added to that
+  user's balance."
+
+[SCREEN: Show a pending purchase card — point to the receipt image and approve button]
+
+
+================================================================================
+  SEGMENT 8 — CLOSING (VIANNE)                                    ~1 minute
+================================================================================
+
+VIANNE:
+  "So that's Trabahub. To summarize what we covered:
+
+  — Users sign up as either customers or freelancers
+  — Everyone verifies their identity through our KYC system
+  — Freelancers get certified in their trade categories by admin
+  — Connects power the platform: 4 to post a job, 6 to apply
+  — Customers find and hire verified professionals
+  — Messaging, hiring, and reviews happen all in one place
+  — Admin manages verifications and connect purchases in real time
+
+  Trabahub is built to make hiring trusted home service professionals in
+  the Philippines safe, simple, and transparent. Thank you!"
+
+[SCREEN: Return to the landing page or the Trabahub logo / home screen]
+[All three presenters visible if doing this live]
+
+================================================================================
+  END OF SCRIPT
+  Total estimated time: 16–18 minutes
+================================================================================
